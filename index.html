@@ -96,6 +96,17 @@
   .wordrow .wr-pron{color:var(--muted);font-weight:600;font-size:14px}
   .wordrow .wr-tip{flex-basis:100%;color:var(--muted);font-size:13px;font-weight:500}
   .vocabbox{margin-top:8px;background:#fffdf6;border-radius:12px;padding:2px 10px 8px}
+  .bubble.agent{max-width:96%;width:96%}
+  .langboxes{display:flex;flex-direction:column;gap:8px}
+  .langbox{background:#fff;border-radius:12px;padding:8px 10px;border:2px solid #ddd}
+  .langbox.vi{border-color:#ffc9c9}
+  .langbox.en{border-color:#bcdcff}
+  .lb-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--muted);margin-bottom:4px}
+  .lb-main{font-weight:700;font-size:18px;margin-top:2px}
+  .lb-sub{color:var(--muted);font-size:15px;margin:4px 0}
+  .lb-line{font-size:16px;margin-bottom:4px}
+  .lb-label{color:var(--muted);font-size:14px;font-weight:600}
+  .langbox .teach-en{font-weight:800;color:var(--primary-d);font-size:19px;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -839,57 +850,66 @@ function updateChild(b, heard, correction, pron, teach){
     d.appendChild(t); d.appendChild(btn); b.appendChild(d);
   });
 }
+/* Hộp riêng cho từng ngôn ngữ: có thẻ lang riêng để đọc đúng giọng */
+function langBox(lang, title, onListen){
+  const box = document.createElement("div");
+  box.className = "langbox " + lang;
+  box.setAttribute("lang", lang==="vi" ? "vi-VN" : "en-US");
+  const head = document.createElement("div"); head.className = "lb-head";
+  const t = document.createElement("span"); t.textContent = title;
+  const btn = document.createElement("button"); btn.className = "mini"; btn.textContent = "🔊 Nghe";
+  btn.onclick = onListen;
+  head.appendChild(t); head.appendChild(btn);
+  const body = document.createElement("div"); body.className = "lb-body";
+  box.appendChild(head); box.appendChild(body);
+  return {box, body};
+}
 function addAgent(r){
   const mix = $("chatMix").value;
   const d = document.createElement("div"); d.className = "bubble agent";
-  const main = document.createElement("div"); main.className = "btxt";
-  const sub = document.createElement("div"); sub.className = "bsub";
+  const hasTeach = !!(r.teach && r.teach.en);
+  const tmap = hasTeach ? (Array.isArray(r.teach.map) ? r.teach.map : []).filter(m=>m && m.en).slice(0,5) : [];
   const vocab = (Array.isArray(r.vocab) ? r.vocab : []).filter(v=>v && v.en).slice(0,3);
-  const enMarks = vocab.map(v=>({w:v.en}));
-  const viMarks = vocab.map(v=>({w:v.vi || ""}));
-  const setMarked = (el, prefix, text, marks)=>{
-    el.textContent = "";
-    if(prefix) el.appendChild(document.createTextNode(prefix));
-    el.appendChild(markSentence(text, marks));
+
+  const line = (cls, prefix, text, marks)=>{
+    const el = document.createElement("div"); el.className = cls;
+    if(prefix){
+      const p = document.createElement("span"); p.className = "lb-label"; p.textContent = prefix;
+      el.appendChild(p);
+    }
+    el.appendChild(markSentence(text, marks || []));
+    return el;
   };
-  if(mix==="vi_mostly"){
-    setMarked(main, "🦊 ", r.reply_vi || "", viMarks);
-    setMarked(sub, "🇬🇧 ", r.reply_en || "", enMarks); sub.classList.add("strong");
-  }else{
-    setMarked(main, "🦊 ", r.reply_en || "", enMarks);
-    setMarked(sub, "", r.reply_vi || "", viMarks);
-  }
-  if(r.teach && r.teach.en){
-    const tb = document.createElement("div"); tb.className = "teachbox";
-    const t1 = document.createElement("div"); t1.className = "teach-en";
-    const tmap = (Array.isArray(r.teach.map) ? r.teach.map : []).filter(m=>m && m.en).slice(0,5);
-    if(r.teach.vi){
-      const t0 = document.createElement("div"); t0.className = "teach-vi";
-      t0.appendChild(document.createTextNode("🇻🇳 "));
-      t0.appendChild(markSentence(r.teach.vi, tmap.map(m=>({w:m.vi || ""}))));
-      tb.appendChild(t0);
-    }
-    t1.appendChild(document.createTextNode("🇬🇧 Nói thế này nhé: "));
-    t1.appendChild(markSentence(r.teach.en, tmap.map(m=>({w:m.en}))));
-    tb.appendChild(t1);
-    tmap.forEach((m,i)=> tb.appendChild(wordRow(m, i)));
-    if(r.teach.explain_vi){
-      const ex = document.createElement("div"); ex.className = "teach-ex";
-      ex.textContent = r.teach.explain_vi;
-      tb.appendChild(ex);
-    }
-    const tbtn = document.createElement("button"); tbtn.className = "mini"; tbtn.style.marginTop = "6px";
-    tbtn.textContent = "🔊 Nghe câu tiếng Anh";
-    tbtn.onclick = ()=>{ stopAllSpeech(); speakSegments([[r.teach.en,"en"]], chatPlayToken); };
-    tb.appendChild(tbtn);
-    d.appendChild(tb);
-  }
-  d.appendChild(main); d.appendChild(sub);
-  if(vocab.length){
-    const vb = document.createElement("div"); vb.className = "vocabbox";
-    vocab.forEach((v,i)=> vb.appendChild(wordRow(v, i)));
-    d.appendChild(vb);
-  }
+  const listen = segs => ()=>{
+    if(!segs.length) return;
+    stopAllSpeech();
+    speakSegments(segs, chatPlayToken);
+  };
+
+  /* Ô tiếng Việt: chỉ chứa tiếng Việt, đọc bằng giọng Việt */
+  const viSegs = [];
+  if(hasTeach && r.teach.explain_vi) viSegs.push([r.teach.explain_vi,"vi"]);
+  if(r.reply_vi) viSegs.push([r.reply_vi,"vi"]);
+  const vb = langBox("vi", "🇻🇳 Tiếng Việt", listen(viSegs));
+  if(hasTeach && r.teach.vi) vb.body.appendChild(line("lb-line", "🗣 Con nói: ", r.teach.vi, tmap.map(m=>({w:m.vi || ""}))));
+  if(hasTeach && r.teach.explain_vi) vb.body.appendChild(line("lb-sub", "", r.teach.explain_vi));
+  if(r.reply_vi) vb.body.appendChild(line("lb-main", "🦊 ", r.reply_vi, vocab.map(v=>({w:v.vi || ""}))));
+
+  /* Ô tiếng Anh: câu tiếng Anh, từ vựng, phiên âm và cách đọc riêng từng từ */
+  const enSegs = [];
+  if(hasTeach) enSegs.push([r.teach.en,"en"]);
+  if(r.reply_en) enSegs.push([r.reply_en,"en"]);
+  const eb = langBox("en", "🇬🇧 English", listen(enSegs));
+  if(hasTeach) eb.body.appendChild(line("teach-en", "Nói thế này nhé: ", r.teach.en, tmap.map(m=>({w:m.en}))));
+  if(r.reply_en) eb.body.appendChild(line("lb-main", "🦊 ", r.reply_en, vocab.map(v=>({w:v.en}))));
+  tmap.forEach((m,i)=> eb.body.appendChild(wordRow(m, i)));
+  vocab.forEach((v,i)=> eb.body.appendChild(wordRow(v, i)));
+
+  const wrap = document.createElement("div"); wrap.className = "langboxes";
+  if(mix==="vi_mostly"){ wrap.appendChild(vb.box); wrap.appendChild(eb.box); }
+  else{ wrap.appendChild(eb.box); wrap.appendChild(vb.box); }
+  d.appendChild(wrap);
+
   const curScene = getScene();
   if(curScene && parseInt(r.step,10) > 0){
     const chip = document.createElement("div"); chip.className = "stepchip";
@@ -897,13 +917,13 @@ function addAgent(r){
     d.appendChild(chip);
   }
   const act = document.createElement("div"); act.className = "bact";
-  const b1 = document.createElement("button"); b1.className = "mini"; b1.textContent = "🔊 Nghe lại";
+  const b1 = document.createElement("button"); b1.className = "mini"; b1.textContent = "🔊 Nghe cả hai";
   b1.onclick = ()=> speakChat(r);
   act.appendChild(b1);
   if(r.hint){
     const h = document.createElement("button"); h.className = "mini hint";
     h.textContent = "💡 Bé thử nói: " + r.hint;
-    h.onclick = ()=>{ if("speechSynthesis" in window){ speechSynthesis.cancel(); speechSynthesis.speak(mkUtter(r.hint,"en-US")); } };
+    h.onclick = ()=>{ stopAllSpeech(); speakWord(r.hint); };
     act.appendChild(h);
   }
   d.appendChild(act);
@@ -957,18 +977,23 @@ async function geminiTTS(text, lang){
     ? "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in Vietnamese: "
     : "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in American English: ";
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
-  const res = await fetch(url,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      contents:[{parts:[{text: style + text}]}],
-      generationConfig:{
-        responseModalities:["AUDIO"],
-        speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}
-      }
-    })
-  });
-  const data = await res.json();
+  /* Khóa sẵn ngôn ngữ (vi-VN / en-US) để đọc đúng giọng; nếu API không nhận thì thử lại không khóa */
+  const post = async (withLang)=>{
+    const sc = {voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}};
+    if(withLang) sc.languageCode = lang==="vi" ? "vi-VN" : "en-US";
+    const rs = await fetch(url,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        contents:[{parts:[{text: style + text}]}],
+        generationConfig:{responseModalities:["AUDIO"], speechConfig: sc}
+      })
+    });
+    return {res: rs, data: await rs.json()};
+  };
+  let out = await post(true);
+  if(!out.res.ok && /language/i.test(out.data?.error?.message || "")) out = await post(false);
+  const res = out.res, data = out.data;
   if(!res.ok) throw new Error(data?.error?.message || ("HTTP "+res.status));
   const parts = data?.candidates?.[0]?.content?.parts || [];
   const part = parts.find(p=>p.inlineData || p.inline_data);
