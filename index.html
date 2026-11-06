@@ -116,6 +116,59 @@
   .chrow .meta{font-size:13px;color:var(--muted);margin-top:2px}
   .chrow .btns{display:flex;gap:6px;flex-shrink:0}
   .mini.primary{background:var(--primary);color:#fff}
+
+  /* Nhân vật Mimi */
+  .mimi{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px}
+  .mimi-svg{overflow:visible;display:block;flex-shrink:0}
+  .mimi-info{text-align:left}
+  .mimi-name{font-weight:800;font-size:20px}
+  #mimiStatus{color:var(--muted);font-size:14px;min-height:20px}
+  .mimi-svg #mimiSmile,.mimi-svg #mimiMouthOpen{transition:opacity .08s}
+  .mimi-svg .eye{transform-box:fill-box;transform-origin:center;animation:mimiBlink 4.2s infinite}
+  @keyframes mimiBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+  .mimi-svg .pupil{transition:transform .35s}
+  .mimi[data-state="thinking"] .pupil{transform:translate(3px,-4px)}
+  .mimi-svg .mimi-body{transform-box:fill-box;transform-origin:bottom center;animation:mimiBreath 3.2s ease-in-out infinite}
+  @keyframes mimiBreath{50%{transform:scale(1.015) translateY(-1px)}}
+  .mimi-svg .mimi-headgrp{transform-box:fill-box;transform-origin:center bottom}
+  .mimi[data-state="talking"] .mimi-headgrp{animation:mimiBob .55s ease-in-out infinite}
+  @keyframes mimiBob{0%,100%{transform:rotate(-1.5deg) translateY(0)}50%{transform:rotate(1.5deg) translateY(-2px)}}
+  .mimi-svg .ear{transform-box:fill-box;transform-origin:bottom center}
+  .mimi[data-state="listening"] .ear-l{animation:mimiEarL 1s ease-in-out infinite}
+  .mimi[data-state="listening"] .ear-r{animation:mimiEarR 1s ease-in-out infinite}
+  @keyframes mimiEarL{50%{transform:rotate(-10deg)}}
+  @keyframes mimiEarR{50%{transform:rotate(10deg)}}
+  .mimi-waves,.mimi-dots{opacity:0;transition:opacity .2s}
+  .mimi[data-state="listening"] .mimi-waves{opacity:1}
+  .mimi[data-state="thinking"] .mimi-dots{opacity:1}
+  .mimi-waves .w1{animation:mimiWave 1s infinite}
+  .mimi-waves .w2{animation:mimiWave 1s .25s infinite}
+  @keyframes mimiWave{0%,100%{opacity:.2}50%{opacity:1}}
+  .mimi-dots circle{animation:mimiDot 1.2s infinite}
+  .mimi-dots .d2{animation-delay:.2s}
+  .mimi-dots .d3{animation-delay:.4s}
+  @keyframes mimiDot{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
+  .mimi.cheer .mimi-svg{animation:mimiHop .5s ease-out 2}
+  @keyframes mimiHop{40%{transform:translateY(-14px)}}
+  @media (prefers-reduced-motion: reduce){ .mimi *{animation:none !important} }
+
+  /* Tab Trò chuyện / Giảng bài */
+  .mtabs{display:flex;gap:8px;justify-content:center;margin:6px 0 12px}
+  .mtabs button{background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12);padding:8px 18px}
+  .mtabs button.on{background:var(--blue);color:#fff}
+
+  /* Bài giảng */
+  .lesson-head{display:flex;justify-content:space-between;gap:8px;font-weight:800;margin:4px 0 8px;text-align:left}
+  #lessonBody{text-align:left}
+  .ls-heading{font-weight:800;font-size:20px;margin:6px 0}
+  .ls-formula{background:#fff;border:3px dashed var(--blue);border-radius:12px;padding:8px 12px;font-weight:800;font-size:20px;color:#1d6fb8;margin:6px 0;text-align:center}
+  .ls-ex{background:#fffdf6;border:2px solid #f3e6c4;border-radius:12px;padding:6px 10px;margin:6px 0}
+  .ls-ex-top{display:flex;align-items:center;gap:10px}
+  .ls-emoji{font-size:36px;line-height:1}
+  .ls-try{background:#f0fbf4;border:3px dashed var(--green);border-radius:16px;padding:10px;margin-top:10px;text-align:center}
+  .ls-try-en{font-size:26px;font-weight:800;color:var(--primary-d);margin:4px 0}
+  .ls-done{text-align:center}
+  .ls-done .row{margin-top:10px}
 </style>
 </head>
 <body>
@@ -178,6 +231,45 @@
 
   <div id="chatView" style="display:none">
     <div class="card">
+      <div class="mimi" id="mimi" data-state="idle">
+        <svg class="mimi-svg" viewBox="0 0 200 190" width="150" height="142" role="img" aria-label="Mimi, chú cáo">
+          <g class="mimi-waves" fill="none" stroke="#4d9de0" stroke-width="5" stroke-linecap="round">
+            <path class="w1" d="M22 78 q-9 17 0 34"/><path class="w2" d="M10 68 q-17 27 0 54"/>
+            <path class="w1" d="M178 78 q9 17 0 34"/><path class="w2" d="M190 68 q17 27 0 54"/>
+          </g>
+          <g class="mimi-dots" fill="#9aa3b2">
+            <circle class="d1" cx="150" cy="22" r="5"/><circle class="d2" cx="168" cy="14" r="6.5"/><circle class="d3" cx="188" cy="6" r="8"/>
+          </g>
+          <g class="mimi-body">
+            <path d="M52 190 q0-48 48-48 q48 0 48 48 z" fill="#ff8c42"/>
+            <path d="M84 190 q0-30 16-30 q16 0 16 30 z" fill="#fff"/>
+            <g class="mimi-headgrp">
+              <g class="ear ear-l"><path d="M50 74 L56 16 L94 52 Z" fill="#ff8c42"/><path d="M61 62 L62 34 L82 53 Z" fill="#ffc9a8"/></g>
+              <g class="ear ear-r"><path d="M150 74 L144 16 L106 52 Z" fill="#ff8c42"/><path d="M139 62 L138 34 L118 53 Z" fill="#ffc9a8"/></g>
+              <ellipse cx="100" cy="96" rx="56" ry="48" fill="#ff8c42"/>
+              <ellipse cx="100" cy="116" rx="36" ry="25" fill="#fff"/>
+              <ellipse cx="66" cy="110" rx="9" ry="6" fill="#ff9aa8" opacity=".6"/>
+              <ellipse cx="134" cy="110" rx="9" ry="6" fill="#ff9aa8" opacity=".6"/>
+              <g class="eye"><ellipse cx="78" cy="88" rx="9" ry="11" fill="#2b2d42"/><circle class="pupil" cx="81" cy="84" r="3.5" fill="#fff"/></g>
+              <g class="eye"><ellipse cx="122" cy="88" rx="9" ry="11" fill="#2b2d42"/><circle class="pupil" cx="125" cy="84" r="3.5" fill="#fff"/></g>
+              <ellipse cx="100" cy="104" rx="7" ry="5" fill="#2b2d42"/>
+              <path id="mimiSmile" style="opacity:1" d="M88 114 q12 12 24 0" fill="none" stroke="#2b2d42" stroke-width="3.5" stroke-linecap="round"/>
+              <ellipse id="mimiMouthOpen" style="opacity:0" cx="100" cy="120" rx="9" ry="6" fill="#c0394f"/>
+            </g>
+          </g>
+        </svg>
+        <div class="mimi-info">
+          <div class="mimi-name">Mimi 🦊</div>
+          <div id="mimiStatus">Mimi đang chờ bé…</div>
+        </div>
+      </div>
+
+      <div class="mtabs">
+        <button id="tabChat" class="on">💬 Trò chuyện</button>
+        <button id="tabLesson">🎓 Giảng bài</button>
+      </div>
+
+      <div id="chatPane">
       <div class="chatsettings">
         <div>
           <label for="chatMix">Mimi nói</label>
@@ -230,6 +322,50 @@
         <button class="ghost" id="chatReset">🔄 Cuộc trò chuyện mới</button>
       </div>
       <div class="small">Bấm micro khi Mimi nói xong nhé. Bé có thể nói tiếng Anh, tiếng Việt hoặc trộn cả hai.</div>
+      </div><!-- /chatPane -->
+
+      <div id="lessonPane" style="display:none">
+        <div id="lessonSetup">
+          <div class="chatsettings">
+            <div>
+              <label for="lessonKind">Loại bài giảng</label>
+              <select id="lessonKind">
+                <option value="grammar">Ngữ pháp</option>
+                <option value="vocab">Từ vựng</option>
+              </select>
+            </div>
+            <div>
+              <label for="lessonTopic">Chủ đề (không bắt buộc)</label>
+              <input id="lessonTopic" placeholder="ví dụ: I am, this is, đồ dùng học tập...">
+            </div>
+          </div>
+          <div class="row"><button class="primary" id="lessonCreate">🎓 Mimi giảng bài</button></div>
+          <div class="loading" id="lessonStatus"></div>
+          <div class="small">Để trống chủ đề thì Mimi tự chọn bài phù hợp với tuổi của bé (tuổi lấy ở ô "Tuổi của bé" trong tab Trò chuyện). Mimi giảng bằng giọng nói theo từng bước: giải thích, ví dụ, mẹo, rồi cho bé luyện nói theo.</div>
+          <div class="small" style="margin-top:10px;font-weight:700">📚 Bài đã giảng</div>
+          <div class="chlist" id="lessonSaved"></div>
+        </div>
+
+        <div id="lessonPlayer" style="display:none">
+          <div class="lesson-head"><span id="lessonTitle"></span><span id="lessonStep"></span></div>
+          <div id="lessonBody"></div>
+          <div id="lessonTry" class="ls-try" style="display:none">
+            <div id="lessonTryPrompt"></div>
+            <div id="lessonTryEn" class="ls-try-en"></div>
+            <div class="row">
+              <button class="mini" id="lessonTryListen">🔊 Nghe mẫu</button>
+              <button class="btn-mic" id="lessonMic">🎤 Bé nói theo</button>
+            </div>
+            <div id="lessonResult" class="result"></div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="ghost" id="lessonPrev">⬅️ Trước</button>
+            <button class="ghost" id="lessonReplay">🔊 Giảng lại</button>
+            <button class="primary" id="lessonNext">Tiếp ➡️</button>
+          </div>
+          <div class="row"><button class="ghost" id="lessonExit">✖ Thoát bài giảng</button></div>
+        </div>
+      </div>
     </div>
   </div>
 </main>
@@ -352,7 +488,7 @@ const MODEL_KEY  = "kidsEnglish.model";
 
 /* Dữ liệu riêng của từng bé được lưu kèm id của bé; cài đặt chung (API key, giọng đọc) thì dùng chung */
 let activeChildId = "";
-const CHILD_KEY_NAMES = ["kidsEnglish.custom","kidsEnglish.stars","kidsEnglish.plan","kidsEnglish.progress","kidsEnglish.scenes","kidsEnglish.plans"];
+const CHILD_KEY_NAMES = ["kidsEnglish.custom","kidsEnglish.stars","kidsEnglish.plan","kidsEnglish.progress","kidsEnglish.scenes","kidsEnglish.plans","kidsEnglish.lessons"];
 const scoped = k => (activeChildId && CHILD_KEY_NAMES.indexOf(k) >= 0) ? k + "." + activeChildId : k;
 const safeGet = (k,d)=>{ try{ const v=localStorage.getItem(scoped(k)); return v===null?d:v }catch(e){ return d } };
 const safeSet = (k,v)=>{ try{ localStorage.setItem(scoped(k),v) }catch(e){} };
@@ -364,10 +500,11 @@ const TTS_KEY = "kidsEnglish.ttsMode";
 const TTSMODEL_KEY = "kidsEnglish.ttsModel";
 const VOICE_KEY = "kidsEnglish.ttsVoice";
 const PLANS_KEY = "kidsEnglish.plans";          /* các buổi (giáo trình) đã lưu của từng bé */
+const LESSONS_KEY = "kidsEnglish.lessons";      /* các bài giảng ngữ pháp / từ vựng đã lưu của từng bé */
 const CHILDREN_KEY = "kidsEnglish.children";    /* danh sách bé */
 const ACTIVE_KEY = "kidsEnglish.activeChild";   /* bé đang chọn */
 
-let scenes = [], custom = [], totalStars = 0, plan = null, progress = {}, plans = [];
+let scenes = [], custom = [], totalStars = 0, plan = null, progress = {}, plans = [], savedLessons = [];
 let topicId = "base:" + Object.keys(BASE_TOPICS)[0];
 let idx = 0;
 
@@ -384,6 +521,7 @@ function loadChildState(){
   if(typeof progress !== "object" || Array.isArray(progress)) progress = {};
   scenes = jparse(safeGet(SCENES_KEY,"[]"), []); if(!Array.isArray(scenes)) scenes = [];
   plans = jparse(safeGet(PLANS_KEY,"[]"), []); if(!Array.isArray(plans)) plans = [];
+  savedLessons = jparse(safeGet(LESSONS_KEY,"[]"), []); if(!Array.isArray(savedLessons)) savedLessons = [];
   topicId = plan ? "plan:0" : "base:" + Object.keys(BASE_TOPICS)[0];
   idx = 0;
 }
@@ -1017,6 +1155,7 @@ const ttsEl = new Audio();
 const ttsCache = new Map();
 let chatPlayToken = 0;
 let warnedNoVi = false;
+let speechGen = 0;
 
 function pcmToWav(pcm, rate){
   const dv = new DataView(new ArrayBuffer(44 + pcm.length));
@@ -1030,8 +1169,10 @@ function pcmToWav(pcm, rate){
 }
 function stopAllSpeech(){
   chatPlayToken++;
+  speechGen++;
   try{ ttsEl.pause(); }catch(e){}
   if("speechSynthesis" in window) speechSynthesis.cancel();
+  setMimi("idle");
 }
 /* Gọi trong thao tác bấm của bé để trình duyệt (nhất là Safari/iPhone) cho phép phát tiếng sau đó */
 function unlockAudio(){
@@ -1090,6 +1231,7 @@ async function geminiTTS(text, lang, mixed){
 }
 function playUrl(url){
   return new Promise(res=>{
+    setMimi("talking");
     ttsEl.onended = ()=>res();
     ttsEl.onerror = ()=>res();
     ttsEl.src = url;
@@ -1097,8 +1239,10 @@ function playUrl(url){
   });
 }
 function speakBrowser(segs){
-  if(!("speechSynthesis" in window)) return;
+  if(!("speechSynthesis" in window)){ setMimi("idle"); return; }
   speechSynthesis.cancel();
+  const gen = ++speechGen;
+  let pending = 0;
   const hasVi = speechSynthesis.getVoices().some(v=>/^vi/i.test(v.lang));
   segs.forEach(([t,l])=>{
     if(l==="vi" && !hasVi){
@@ -1108,14 +1252,20 @@ function speakBrowser(segs){
       }
       return;
     }
-    speechSynthesis.speak(mkUtter(t, l==="vi" ? "vi-VN" : "en-US"));
+    const u = mkUtter(t, l==="vi" ? "vi-VN" : "en-US");
+    pending++;
+    u.onstart = ()=>{ if(gen === speechGen) setMimi("talking"); };
+    u.onend = u.onerror = ()=>{ pending--; if(gen === speechGen && pending <= 0) setMimi("idle"); };
+    speechSynthesis.speak(u);
   });
+  if(!pending) setMimi("idle");
 }
 async function speakSegments(segs, token){
   const mode = safeGet(TTS_KEY,"") || "gemini";
   if(mode==="browser" || !safeGet(API_KEY,"")){ speakBrowser(segs); return; }
   try{
     /* Gọi các đoạn song song, đoạn nào xong theo thứ tự thì phát ngay để bé không phải chờ lâu */
+    setMimi("thinking");
     const ps = segs.map(([t,l,m])=>geminiTTS(t,l,m));
     ps.forEach(p=>p.catch(()=>{}));
     for(const p of ps){
@@ -1124,6 +1274,7 @@ async function speakSegments(segs, token){
       await playUrl(u);
       if(token !== chatPlayToken) return;
     }
+    setMimi("idle");
   }catch(e){
     console.error(e);
     if(token === chatPlayToken){
@@ -1187,6 +1338,7 @@ async function chatSend(parts, opt){
   if(chatBusy) return;
   if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
   chatBusy = true;
+  setMimi("thinking");
   $("chatLoading").classList.add("show");
   $("btnChatMic").disabled = true; $("chatSend").disabled = true;
   let cb = null;
@@ -1195,6 +1347,7 @@ async function chatSend(parts, opt){
     const r = await chatCall(parts);
     const heard = (opt.typed || r.heard || "").trim();
     if(cb) updateChild(cb, heard || "(Mimi chưa nghe rõ)", (r.correction||"").trim(), opt.typed ? [] : r.pronunciation, r.teach);
+    if(!opt.silent && heard && !(r.correction||"").trim() && !(Array.isArray(r.pronunciation) && r.pronunciation.length)) mimiCheer();
     chatHistory.push({role:"user", text: opt.silent ? "(Hãy chào bé trước)" : (heard || "(không rõ)")});
     chatHistory.push({role:"model", text: (r.reply_en||"") + " / " + (r.reply_vi||"") +
       (r.teach && r.teach.en ? " [Mimi vừa dạy bé nói: " + r.teach.en + "]" : "") +
@@ -1204,6 +1357,7 @@ async function chatSend(parts, opt){
   }catch(e){
     console.error(e);
     if(cb) cb.remove();
+    setMimi("idle");
     toast("Có lỗi: " + (e.message || e));
   }finally{
     chatBusy = false;
@@ -1217,6 +1371,7 @@ function chatMicUI(on){
   const b = $("btnChatMic");
   b.classList.toggle("rec", on);
   b.textContent = on ? "⏹ Nói xong rồi" : "🎤 Bé nói chuyện";
+  setMimi(on ? "listening" : "thinking");
 }
 async function chatMicToggle(){
   if(chatBusy) return;
@@ -1244,7 +1399,7 @@ function chatStop(){
 }
 async function onChatRecStop(){
   const blob = new Blob(chatChunks, {type: chatRecorder.mimeType || "audio/webm"});
-  if(blob.size < 1500){ toast("Mimi chưa nghe thấy gì, bé thử lại nhé!"); return; }
+  if(blob.size < 1500){ toast("Mimi chưa nghe thấy gì, bé thử lại nhé!"); setMimi("idle"); return; }
   try{
     const wav = await blobToWav16k(blob);
     await chatSend([
@@ -1252,7 +1407,7 @@ async function onChatRecStop(){
       {inline_data:{mime_type:"audio/wav", data:bytesToBase64(wav)}}
     ], {});
   }catch(e){
-    console.error(e); toast("Có lỗi: " + (e.message || e));
+    console.error(e); setMimi("idle"); toast("Có lỗi: " + (e.message || e));
   }
 }
 
@@ -1379,6 +1534,416 @@ renderSceneOptions();
 $("chatAge").value = plan ? plan.age : 6;
 chatEmpty();
 
+/* ---------- Nhân vật Mimi: hoạt hình theo trạng thái (chờ / nghe / nghĩ / nói) ---------- */
+let mimiMouthTimer = null, mimiCheerTimer = null;
+const MIMI_STATUS = {
+  idle:"Mimi đang chờ bé…", listening:"Mimi đang nghe bé nói…",
+  thinking:"Mimi đang nghĩ…", talking:"Mimi đang nói…"
+};
+function setMouth(v){
+  const o = $("mimiMouthOpen"), s = $("mimiSmile");
+  if(!o || !s) return;
+  if(v < 0.18){ o.style.opacity = "0"; s.style.opacity = "1"; }
+  else{
+    s.style.opacity = "0"; o.style.opacity = "1";
+    o.setAttribute("ry", (3 + v*11).toFixed(1));
+    o.setAttribute("rx", (7 + v*4).toFixed(1));
+  }
+}
+function setMimi(state){
+  const el = $("mimi"); if(!el) return;
+  el.setAttribute("data-state", state);
+  $("mimiStatus").textContent = MIMI_STATUS[state] || "";
+  if(state === "talking"){
+    /* miệng mở khép ngẫu nhiên như đang nói */
+    if(!mimiMouthTimer) mimiMouthTimer = setInterval(()=> setMouth(Math.random() < 0.2 ? 0 : 0.3 + Math.random()*0.7), 130);
+  }else{
+    if(mimiMouthTimer){ clearInterval(mimiMouthTimer); mimiMouthTimer = null; }
+    setMouth(0);
+  }
+}
+function mimiCheer(){
+  const el = $("mimi"); if(!el) return;
+  el.classList.add("cheer");
+  clearTimeout(mimiCheerTimer);
+  mimiCheerTimer = setTimeout(()=> el.classList.remove("cheer"), 1100);
+}
+
+/* ---------- Giảng bài: ngữ pháp và từ vựng ---------- */
+let lessonCur = null;        /* bài đang học: {id, createdAt, kind, topic, age, data} */
+let lessonIdx = 0;           /* chỉ số bước; bằng số bước nghĩa là màn hình hoàn thành */
+let lessonBusy = false;
+let lessonRecorder = null, lessonChunks = [], lessonStream = null, lessonRecording = false, lessonTimer = null;
+
+function showTab(t){
+  $("chatPane").style.display = t==="chat" ? "" : "none";
+  $("lessonPane").style.display = t==="lesson" ? "" : "none";
+  $("tabChat").className = t==="chat" ? "on" : "";
+  $("tabLesson").className = t==="lesson" ? "on" : "";
+  stopAllSpeech();
+}
+$("tabChat").onclick = ()=> showTab("chat");
+$("tabLesson").onclick = ()=>{ showTab("lesson"); renderLessonSaved(); };
+
+async function generateLesson(kind, topic, age){
+  const isG = kind === "grammar";
+  const prompt =
+`Bạn là cô giáo tiếng Anh dạy trẻ em Việt Nam. Hãy soạn một bài giảng ngắn về ${isG ? "NGỮ PHÁP" : "TỪ VỰNG"} cho một bé ${age} tuổi.
+Chủ đề: ${topic ? '"' + topic + '"' : "hãy tự chọn một chủ đề phù hợp với tuổi của bé (" + (isG ? "một điểm ngữ pháp rất cơ bản" : "một nhóm từ vựng quen thuộc") + ")"}.
+Bài giảng gồm đúng 5 bước. Bài sẽ được đọc thành tiếng, nên viết như lời nói. Mỗi bước có:
+- "heading": tiêu đề ngắn bằng tiếng Việt.
+- "say_vi": lời cô giáo giảng bằng tiếng Việt, 2-4 câu ngắn, thân thiện, hợp với bé ${age} tuổi. Có thể xen từ tiếng Anh nguyên dạng.
+- "formula": ${isG ? "công thức hoặc cấu trúc của bước đó, ví dụ \"I + am + tên\" (để rỗng nếu bước đó không có công thức)" : "để rỗng"}.
+- "examples": 2-4 ví dụ, mỗi ví dụ {"emoji","en","vi","ipa","say","tip"}: "en" là từ hoặc câu tiếng Anh ngắn, hợp tuổi; "vi" là nghĩa tiếng Việt; "ipa" là phiên âm IPA đặt giữa hai dấu /; "say" là cách đọc bồi bằng chữ Việt; "tip" là mẹo một câu về âm khó (có thể rỗng).
+- "note_vi": một câu ghi nhớ hoặc cảnh báo lỗi người Việt hay mắc (có thể rỗng).
+- "practice": {"prompt_vi":"lời mời bé nói theo","en":"từ hoặc câu bé cần nói theo","vi":"nghĩa tiếng Việt"} hoặc null nếu bước đó chỉ là giới thiệu.
+${isG
+  ? "Cấu trúc bài ngữ pháp: bước 1 giới thiệu và vì sao cần học; bước 2 cấu trúc và công thức; bước 3 thêm ví dụ (câu hỏi hoặc câu phủ định nếu phù hợp); bước 4 lỗi hay gặp của người Việt; bước 5 luyện nói tổng hợp."
+  : "Cấu trúc bài từ vựng: bước 1 giới thiệu chủ đề; bước 2 và 3 mỗi bước 3-4 từ mới; bước 4 dùng các từ trong câu ngắn; bước 5 luyện nói tổng hợp."}
+Cuối bài có "recap_vi": 2-3 câu tiếng Việt tổng kết và khen bé.
+Nội dung phải an toàn cho trẻ em, tiếng Anh chuẩn, không hỏi thông tin cá nhân.
+Chỉ trả về JSON đúng dạng:
+{"title":"tên bài bằng tiếng Việt","emoji":"📘","goal":"mục tiêu một câu","slides":[{"heading":"","say_vi":"","formula":"","examples":[{"emoji":"","en":"","vi":"","ipa":"","say":"","tip":""}],"note_vi":"","practice":{"prompt_vi":"","en":"","vi":""}}],"recap_vi":""}`;
+  const d = await geminiJSON(prompt, 0.6);
+  if(d.error) throw new Error(String(d.error));
+  const str = v => String(v || "").trim();
+  const slides = (Array.isArray(d.slides) ? d.slides : []).map(s=>({
+    heading: str(s && s.heading),
+    say_vi: str(s && s.say_vi),
+    formula: str(s && s.formula),
+    note_vi: str(s && s.note_vi),
+    examples: (Array.isArray(s && s.examples) ? s.examples : [])
+      .filter(e=>e && e.en && e.vi).slice(0,4)
+      .map(e=>({emoji:str(e.emoji), en:str(e.en), vi:str(e.vi), ipa:str(e.ipa), say:str(e.say), tip:str(e.tip)})),
+    practice: (s && s.practice && s.practice.en)
+      ? {prompt_vi: str(s.practice.prompt_vi) || "Con nói theo cô nhé.", en: str(s.practice.en), vi: str(s.practice.vi)}
+      : null
+  })).filter(s=>s.heading && s.say_vi);
+  if(slides.length < 2) throw new Error("AI chưa soạn được bài giảng hợp lệ, hãy thử lại");
+  const title = str(d.title);
+  if(!title) throw new Error("AI chưa soạn được bài giảng hợp lệ, hãy thử lại");
+  return {title, emoji: str(d.emoji) || (isG ? "📘" : "🔤"), kind: isG ? "grammar" : "vocab",
+          goal: str(d.goal), slides, recap_vi: str(d.recap_vi) || "Con đã học xong bài rồi, giỏi lắm!"};
+}
+
+/* Thứ tự đọc của một bước: lời giảng → ví dụ tiếng Anh → nghĩa → ghi nhớ → mời bé nói theo */
+function lessonSegments(slide){
+  const segs = [[slide.say_vi,"vi"]];
+  if(slide.examples.length){
+    segs.push([slide.examples.map(e=>e.en).join(". ") + ".","en"]);
+    segs.push(["Nghĩa là: " + slide.examples.map(e=>e.vi).join("; ") + ".","vi"]);
+  }
+  if(slide.note_vi) segs.push([slide.note_vi,"vi"]);
+  if(slide.practice){
+    segs.push([slide.practice.prompt_vi,"vi"]);
+    segs.push([slide.practice.en,"en"]);
+  }
+  const merged = mergeSegs(segs.filter(s=>s[0]));
+  const ew = new Set();
+  const add = w => String(w || "").toLowerCase().split(/[^a-z']+/).forEach(x=>{ if(x.length >= 2) ew.add(x); });
+  slide.examples.forEach(e=>add(e.en));
+  if(slide.practice) add(slide.practice.en);
+  merged.forEach(s=>{
+    if(s[1]==="vi") s[2] = s[0].toLowerCase().split(/[^\p{L}']+/u).some(t=>ew.has(t));
+  });
+  return merged;
+}
+
+function lessonSpeak(){
+  if(!lessonCur) return;
+  const L = lessonCur.data;
+  stopAllSpeech();
+  const token = chatPlayToken;
+  if(lessonIdx >= L.slides.length){
+    mimiCheer();
+    speakSegments([[L.recap_vi,"vi",true]], token);
+    return;
+  }
+  speakSegments(lessonSegments(L.slides[lessonIdx]), token);
+}
+
+function lessonBox(cls, prefix, text, marks){
+  const d = document.createElement("div"); d.className = cls;
+  if(prefix) d.appendChild(document.createTextNode(prefix));
+  d.appendChild(markSentence(text, marks || []));
+  return d;
+}
+
+function renderLesson(){
+  if(!lessonCur) return;
+  const L = lessonCur.data, total = L.slides.length;
+  const body = $("lessonBody"); body.innerHTML = "";
+  $("lessonTitle").textContent = (L.emoji || "📘") + " " + L.title;
+  $("lessonResult").classList.remove("show");
+  $("lessonResult").innerHTML = "";
+
+  if(lessonIdx >= total){
+    /* màn hình hoàn thành */
+    $("lessonStep").textContent = "Hoàn thành 🎉";
+    const done = document.createElement("div"); done.className = "ls-done";
+    const h = document.createElement("div"); h.className = "ls-heading"; h.textContent = "🎉 Con đã học xong bài!";
+    done.appendChild(h);
+    done.appendChild(lessonBox("lb-guide", "🦊 ", L.recap_vi, []));
+    const r1 = document.createElement("div"); r1.className = "row";
+    r1.appendChild(mkBtn("⭐ Lưu các từ vào “Từ của bé”", "ghost", lessonSaveWords));
+    r1.appendChild(mkBtn("💬 Luyện nói với Mimi", "primary", lessonToChat));
+    const r2 = document.createElement("div"); r2.className = "row";
+    r2.appendChild(mkBtn("🔁 Học lại từ đầu", "ghost", ()=>{ lessonIdx = 0; renderLesson(); lessonSpeak(); }));
+    done.appendChild(r1); done.appendChild(r2);
+    body.appendChild(done);
+    $("lessonTry").style.display = "none";
+    $("lessonNext").style.display = "none";
+    $("lessonPrev").disabled = false;
+    return;
+  }
+
+  const s = L.slides[lessonIdx];
+  $("lessonStep").textContent = "Bước " + (lessonIdx+1) + "/" + total;
+  const h = document.createElement("div"); h.className = "ls-heading"; h.textContent = s.heading;
+  body.appendChild(h);
+  if(s.formula){
+    const f = document.createElement("div"); f.className = "ls-formula"; f.textContent = s.formula;
+    body.appendChild(f);
+  }
+  body.appendChild(lessonBox("lb-guide", "🇻🇳 ", s.say_vi, s.examples.map(e=>({w:e.en}))));
+  s.examples.forEach((e,i)=>{
+    const box = document.createElement("div"); box.className = "ls-ex";
+    const top = document.createElement("div"); top.className = "ls-ex-top";
+    if(e.emoji){
+      const em = document.createElement("span"); em.className = "ls-emoji"; em.textContent = e.emoji;
+      top.appendChild(em);
+    }
+    top.appendChild(wordRow(e, i));
+    box.appendChild(top);
+    body.appendChild(box);
+  });
+  if(s.note_vi) body.appendChild(lessonBox("lb-guide", "💡 ", s.note_vi, []));
+
+  const tr = $("lessonTry");
+  if(s.practice){
+    tr.style.display = "";
+    $("lessonTryPrompt").textContent = "🎤 " + s.practice.prompt_vi;
+    $("lessonTryEn").textContent = s.practice.en;
+  }else{
+    tr.style.display = "none";
+  }
+  $("lessonPrev").disabled = (lessonIdx === 0);
+  $("lessonNext").style.display = "";
+  $("lessonNext").textContent = (lessonIdx === total-1) ? "🎉 Xong bài" : "Tiếp ➡️";
+}
+
+function openLesson(entry){
+  lessonCur = entry; lessonIdx = 0;
+  $("lessonSetup").style.display = "none";
+  $("lessonPlayer").style.display = "";
+  renderLesson();
+  lessonSpeak();
+}
+function lessonReset(){
+  lessonCur = null; lessonIdx = 0;
+  if(lessonRecording) lessonStop();
+  $("lessonPlayer").style.display = "none";
+  $("lessonSetup").style.display = "";
+  $("lessonStatus").classList.remove("show");
+  renderLessonSaved();
+}
+
+function saveLesson(entry){
+  savedLessons = savedLessons.filter(x=>x.id !== entry.id);
+  savedLessons.unshift(entry);
+  if(savedLessons.length > 20) savedLessons.length = 20;
+  safeSet(LESSONS_KEY, JSON.stringify(savedLessons));
+}
+function renderLessonSaved(){
+  const box = $("lessonSaved"); if(!box) return;
+  box.innerHTML = "";
+  if(!savedLessons.length){
+    const e = document.createElement("div"); e.className = "small";
+    e.textContent = "Chưa có bài giảng nào. Bấm “Mimi giảng bài” để bắt đầu.";
+    box.appendChild(e); return;
+  }
+  savedLessons.forEach(it=>{
+    const L = it.data || {};
+    const row = document.createElement("div"); row.className = "chrow";
+    const info = document.createElement("div");
+    const t = document.createElement("div"); t.style.fontWeight = "800";
+    t.textContent = (L.emoji || "📘") + " " + (L.title || "Bài giảng");
+    const m = document.createElement("div"); m.className = "meta";
+    m.textContent = (it.kind === "grammar" ? "Ngữ pháp" : "Từ vựng") + " · " + fmtDate(it.createdAt) + " · bé " + (it.age || "?") + " tuổi";
+    info.appendChild(t); info.appendChild(m);
+    const btns = document.createElement("div"); btns.className = "btns";
+    btns.appendChild(mkBtn("Học lại", "mini primary", ()=>{ unlockAudio(); openLesson(it); }));
+    btns.appendChild(mkBtn("🗑", "mini", ()=>{
+      if(!confirm("Xóa bài giảng này?")) return;
+      savedLessons = savedLessons.filter(x=>x.id !== it.id);
+      safeSet(LESSONS_KEY, JSON.stringify(savedLessons));
+      renderLessonSaved();
+    }));
+    row.appendChild(info); row.appendChild(btns);
+    box.appendChild(row);
+  });
+}
+
+/* Nối bài giảng với các phần khác của app */
+function lessonAllItems(L){
+  const seen = new Set(), out = [];
+  L.slides.forEach(s=> s.examples.forEach(e=>{
+    const k = e.en.toLowerCase();
+    if(!seen.has(k)){ seen.add(k); out.push([e.emoji || "⭐", e.en, e.vi]); }
+  }));
+  return out;
+}
+function lessonSaveWords(){
+  if(!lessonCur) return;
+  const have = new Set(custom.map(c=>String(c[1]).toLowerCase()));
+  let added = 0;
+  lessonAllItems(lessonCur.data).forEach(it=>{
+    if(!have.has(it[1].toLowerCase())){ custom.push(it); have.add(it[1].toLowerCase()); added++; }
+  });
+  safeSet(CUSTOM_KEY, JSON.stringify(custom));
+  renderTopics();
+  toast(added ? "Đã lưu " + added + " từ vào “Từ của bé”" : "Các từ này đã có trong “Từ của bé”");
+}
+function lessonToChat(){
+  if(!lessonCur) return;
+  const L = lessonCur.data;
+  const steps = L.slides.filter(s=>s.practice)
+    .map(s=>"Mời bé nói theo: " + s.practice.en + (s.practice.vi ? " (" + s.practice.vi + ")" : ""));
+  const sc = {
+    title: "Luyện: " + L.title, emoji: L.emoji || "🎓", goal: L.goal || "Ôn lại bài vừa giảng",
+    scene: "Mimi vừa giảng bài \"" + L.title + "\" cho bé và giờ cùng bé luyện nói lại những gì đã học bằng cách hỏi đáp vui vẻ.",
+    items: lessonAllItems(L).slice(0,12),
+    steps: steps.length ? steps : ["Hỏi bé về các từ vừa học và mời bé nói lại"],
+    topic: L.title, age: lessonCur.age
+  };
+  scenes.push(sc);
+  if(scenes.length > 20) scenes.shift();
+  safeSet(SCENES_KEY, JSON.stringify(scenes));
+  renderSceneOptions("custom:" + (scenes.length-1));
+  sceneChanged(); renderTopics();
+  showTab("chat");
+  toast("Đã tạo tình huống luyện nói. Bấm ▶ Chào Mimi để bắt đầu!");
+}
+
+/* Tạo bài giảng */
+$("lessonCreate").onclick = async ()=>{
+  if(lessonBusy) return;
+  unlockAudio();
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  const kind = $("lessonKind").value, topic = $("lessonTopic").value.trim();
+  const age = parseInt($("chatAge").value,10) || (currentChild() && currentChild().age) || 6;
+  const btn = $("lessonCreate"), st = $("lessonStatus");
+  lessonBusy = true; btn.disabled = true;
+  st.textContent = "🤖 Mimi đang soạn bài giảng, đợi một chút nhé...";
+  st.classList.add("show");
+  setMimi("thinking");
+  try{
+    const data = await generateLesson(kind, topic, age);
+    const entry = {id:newId(), createdAt:new Date().toISOString(), kind:data.kind, topic, age, data};
+    saveLesson(entry);
+    st.classList.remove("show");
+    openLesson(entry);
+  }catch(e){
+    console.error(e);
+    st.textContent = "Có lỗi: " + (e.message || e);
+    setMimi("idle");
+  }finally{
+    lessonBusy = false; btn.disabled = false;
+  }
+};
+
+/* Điều khiển bài giảng */
+$("lessonPrev").onclick = ()=>{
+  if(!lessonCur || lessonIdx <= 0) return;
+  unlockAudio(); lessonIdx--; renderLesson(); lessonSpeak();
+};
+$("lessonNext").onclick = ()=>{
+  if(!lessonCur) return;
+  unlockAudio();
+  if(lessonIdx < lessonCur.data.slides.length) lessonIdx++;
+  renderLesson(); lessonSpeak();
+};
+$("lessonReplay").onclick = ()=>{ unlockAudio(); lessonSpeak(); };
+$("lessonExit").onclick = ()=>{ stopAllSpeech(); lessonReset(); };
+$("lessonTryListen").onclick = ()=>{
+  if(!lessonCur) return;
+  const s = lessonCur.data.slides[lessonIdx];
+  if(!s || !s.practice) return;
+  unlockAudio(); stopAllSpeech();
+  speakSegments([[s.practice.en,"en"]], chatPlayToken);
+};
+
+/* Bé nói theo câu mẫu → Mimi nhận xét phát âm */
+function lessonMicUI(on){
+  const b = $("lessonMic");
+  b.classList.toggle("rec", on);
+  b.textContent = on ? "⏹ Nói xong rồi" : "🎤 Bé nói theo";
+  setMimi(on ? "listening" : "thinking");
+}
+async function lessonMicToggle(){
+  if(lessonBusy) return;
+  if(lessonRecording){ lessonStop(); return; }
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  stopAllSpeech();
+  try{
+    lessonStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    toast("Không mở được micro. Hãy cho phép quyền micro và mở web bằng https hoặc localhost.");
+    return;
+  }
+  lessonChunks = [];
+  lessonRecorder = new MediaRecorder(lessonStream);
+  lessonRecorder.ondataavailable = e=>{ if(e.data.size) lessonChunks.push(e.data); };
+  lessonRecorder.onstop = onLessonRecStop;
+  lessonRecorder.start();
+  lessonRecording = true; lessonMicUI(true);
+  lessonTimer = setTimeout(()=>{ if(lessonRecording) lessonStop(); }, 10000);
+}
+function lessonStop(){
+  lessonRecording = false; clearTimeout(lessonTimer); lessonMicUI(false);
+  if(lessonRecorder && lessonRecorder.state !== "inactive") lessonRecorder.stop();
+  if(lessonStream) lessonStream.getTracks().forEach(t=>t.stop());
+}
+async function onLessonRecStop(){
+  const blob = new Blob(lessonChunks, {type: lessonRecorder.mimeType || "audio/webm"});
+  const s = lessonCur && lessonCur.data.slides[lessonIdx];
+  if(!s || !s.practice){ setMimi("idle"); return; }
+  if(blob.size < 1500){ toast("Mimi chưa nghe thấy gì, bé thử lại nhé!"); setMimi("idle"); return; }
+  lessonBusy = true;
+  try{
+    const wav = await blobToWav16k(blob);
+    const fb = await askGemini(bytesToBase64(wav), s.practice.en, s.practice.vi || s.practice.en);
+    showLessonResult(fb);
+  }catch(e){
+    console.error(e); setMimi("idle"); toast("Có lỗi: " + (e.message || e));
+  }finally{
+    lessonBusy = false;
+  }
+}
+function showLessonResult(fb){
+  const box = $("lessonResult"); box.innerHTML = "";
+  const stars = Math.max(1, Math.min(5, parseInt(fb.stars,10) || 1));
+  const add = (cls, text)=>{ const d = document.createElement("div"); if(cls) d.className = cls; d.textContent = text; box.appendChild(d); };
+  add("stars", "⭐".repeat(stars) + "☆".repeat(5-stars));
+  if(fb.praise) add("", fb.praise);
+  add("", "🗣 Cô nghe được: " + (fb.heard || "(chưa nghe rõ)"));
+  if(fb.fix) add("", "✏️ Sửa lại nhé: " + fb.fix);
+  if(fb.tip) add("", "💡 Đọc bồi: " + fb.tip);
+  box.classList.toggle("warn", stars <= 2);
+  box.classList.add("show");
+  if(stars >= 4){
+    totalStars += stars - 3;
+    safeSet(STARS_KEY, String(totalStars));
+    $("totalStars").textContent = "⭐ " + totalStars;
+    mimiCheer();
+  }
+  const say = ((fb.praise || "") + " " + (fb.fix || "")).trim();
+  stopAllSpeech();
+  if(say) speakSegments([[say,"vi",true]], chatPlayToken);
+  else setMimi("idle");
+}
+$("lessonMic").onclick = ()=>{ unlockAudio(); lessonMicToggle(); };
+
 /* ---------- Nhiều bé: hồ sơ, dữ liệu riêng từng bé, các buổi đã lưu ---------- */
 let children = [];
 let editingChildId = "";
@@ -1431,6 +1996,7 @@ function applyChild(){
   renderSceneOptions("free");
   showScenePlan();
   chatReset();
+  lessonReset();
   renderTopics(); render();
 }
 function switchChild(id){
