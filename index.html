@@ -81,6 +81,21 @@
   .bubble .stepchip{display:inline-block;margin-top:6px;background:#fff;border-radius:999px;padding:2px 10px;font-size:13px;color:var(--muted);font-weight:700}
   #scenePlan{background:#f6fbff;border:2px solid #cfe6fa;border-radius:14px;padding:8px 12px}
   #scenePlanBody div{margin:3px 0}
+  .bubble .teachbox{background:#fff;border-radius:12px;padding:8px 10px;margin-bottom:8px;font-size:15px;border:2px solid #ffd9a8}
+  .teachbox .teach-en{font-weight:800;color:var(--primary-d);font-size:17px}
+  .teachbox .teach-map{color:var(--ink);font-weight:600;margin-top:3px}
+  .teachbox .teach-ex{color:var(--muted);margin-top:4px;font-weight:400}
+  .teach-vi{font-weight:700;margin-bottom:4px}
+  .hl{text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:3px;border-radius:4px;padding:0 2px}
+  .hl0{text-decoration-color:#ef476f;background:#ffe3ea}
+  .hl1{text-decoration-color:#4d9de0;background:#e0f0ff}
+  .hl2{text-decoration-color:#2fbf71;background:#dcf7e8}
+  .hl3{text-decoration-color:#ff9f1c;background:#fff0d9}
+  .hl4{text-decoration-color:#9b5de5;background:#efe4fb}
+  .wordrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:6px;font-size:16px;font-weight:600}
+  .wordrow .wr-pron{color:var(--muted);font-weight:600;font-size:14px}
+  .wordrow .wr-tip{flex-basis:100%;color:var(--muted);font-size:13px;font-weight:500}
+  .vocabbox{margin-top:8px;background:#fffdf6;border-radius:12px;padding:2px 10px 8px}
 </style>
 </head>
 <body>
@@ -203,6 +218,15 @@
   <input id="apiKey" type="password" placeholder="AIza...">
   <label for="model">Tên model</label>
   <input id="model" placeholder="gemini-2.5-flash">
+  <label for="ttsMode">Giọng đọc của Mimi</label>
+  <select id="ttsMode">
+    <option value="gemini">Giọng Gemini (đọc tiếng Việt rõ hơn)</option>
+    <option value="browser">Giọng có sẵn của trình duyệt</option>
+  </select>
+  <label for="ttsModel">Model giọng đọc (TTS)</label>
+  <input id="ttsModel" placeholder="gemini-3.1-flash-tts-preview">
+  <label for="ttsVoice">Tên giọng Gemini</label>
+  <input id="ttsVoice" placeholder="Kore">
   <p class="small">Key chỉ lưu trong trình duyệt này (localStorage). Lấy key miễn phí tại Google AI Studio. Khi đưa lên mạng cho nhiều người dùng, hãy chuyển lời gọi API sang server của bạn để không lộ key.</p>
   <div class="dlg-actions">
     <button class="ghost" id="settingsCancel">Đóng</button>
@@ -286,6 +310,9 @@ const safeSet = (k,v)=>{ try{ localStorage.setItem(k,v) }catch(e){} };
 const PLAN_KEY = "kidsEnglish.plan";
 const PROG_KEY = "kidsEnglish.progress";
 const SCENES_KEY = "kidsEnglish.scenes";
+const TTS_KEY = "kidsEnglish.ttsMode";
+const TTSMODEL_KEY = "kidsEnglish.ttsModel";
+const VOICE_KEY = "kidsEnglish.ttsVoice";
 let scenes = [];
 try{ scenes = JSON.parse(safeGet(SCENES_KEY,"[]")) || []; }catch(e){ scenes = []; }
 if(!Array.isArray(scenes)) scenes = [];
@@ -365,7 +392,7 @@ function setMode(m){
   $("modeChat").className  = m==="chat"  ? "on" : "";
   $("learnView").style.display = m==="chat" ? "none" : "";
   $("chatView").style.display  = m==="chat" ? "" : "none";
-  if("speechSynthesis" in window) speechSynthesis.cancel();
+  stopAllSpeech();
   if(m!=="chat") render();
 }
 $("modeLearn").onclick = ()=> setMode("learn");
@@ -527,6 +554,9 @@ function showResult(fb){
 function openSettings(){
   $("apiKey").value = safeGet(API_KEY,"");
   $("model").value = safeGet(MODEL_KEY,"") || "gemini-2.5-flash";
+  $("ttsMode").value = safeGet(TTS_KEY,"") || "gemini";
+  $("ttsModel").value = safeGet(TTSMODEL_KEY,"") || "gemini-3.1-flash-tts-preview";
+  $("ttsVoice").value = safeGet(VOICE_KEY,"") || "Kore";
   $("dlgSettings").showModal();
 }
 $("btnSettings").onclick = openSettings;
@@ -534,6 +564,9 @@ $("settingsCancel").onclick = ()=> $("dlgSettings").close();
 $("settingsSave").onclick = ()=>{
   safeSet(API_KEY, $("apiKey").value.trim());
   safeSet(MODEL_KEY, $("model").value.trim());
+  safeSet(TTS_KEY, $("ttsMode").value);
+  safeSet(TTSMODEL_KEY, $("ttsModel").value.trim());
+  safeSet(VOICE_KEY, $("ttsVoice").value.trim());
   $("dlgSettings").close(); toast("Đã lưu cài đặt");
 };
 
@@ -671,14 +704,15 @@ Cách nói: ${MIX_DESC[mix]}
 Quy tắc:
 - Câu thật ngắn, từ đơn giản, hợp với bé ${age} tuổi (bé nhỏ: 3-6 từ mỗi câu; bé lớn: tối đa 12 từ).
 - Mỗi lượt chỉ hỏi MỘT câu hỏi đơn giản để bé trả lời.
-- Bé có thể nói tiếng Anh, tiếng Việt hoặc trộn cả hai. Nếu bé nói tiếng Việt, hãy hiểu, trả lời và nhẹ nhàng dạy bé cách nói câu đó bằng tiếng Anh.
+- Bé có thể nói tiếng Anh, tiếng Việt hoặc trộn cả hai. Nếu bé nói tiếng Việt (hoặc trộn Việt–Anh), hãy hiểu và trả lời bé bình thường, đồng thời điền "teach" để dạy bé nói lại ý đó bằng tiếng Anh: "vi" là câu tiếng Việt của bé (sửa chính tả nếu cần); "en" là câu tiếng Anh đơn giản, đúng ngữ pháp, tương ứng với ý bé vừa nói; "map" là các cặp từ tương ứng giữa hai câu (tối đa 4 cặp), mỗi cặp {"vi","en","ipa","say","tip"}: "vi" phải xuất hiện nguyên văn trong "teach.vi", "en" phải xuất hiện nguyên văn trong "teach.en", "ipa" là phiên âm IPA của từ tiếng Anh đặt giữa hai dấu /, "say" là cách đọc bồi bằng chữ Việt (ví dụ: "két"), "tip" là mẹo một câu tiếng Việt về âm khó nhất của từ đó (có thể để rỗng); "explain_vi" là 1-2 câu tiếng Việt ngắn giải thích từ tiếng Việt nào tương ứng với từ tiếng Anh nào và cách đọc bồi của từ chính, kết thúc bằng lời mời bé nói theo (ví dụ: "Con mèo tiếng Anh là cat, đọc là két nhé. Con nói theo cô nào!"); trong "explain_vi" viết từ tiếng Anh nguyên dạng. Nếu bé chỉ nói tiếng Anh thì "teach" là null. Ở lượt sau, nếu bé nói theo câu tiếng Anh vừa được dạy thì hãy nghe phát âm, khen hoặc sửa.
 - Nếu bé nói tiếng Anh sai (từ, ngữ pháp), nhắc nhẹ nhàng bằng tiếng Việt trong "correction" kèm câu đúng. Chỉ sửa lỗi quan trọng nhất. Nếu bé nói đúng thì để rỗng.
 - Nghe kỹ PHÁT ÂM tiếng Anh của bé. Liệt kê tối đa 2 từ bé phát âm chưa chuẩn trong "pronunciation": "word" là từ đúng, "said" là bé đọc nghe giống như thế nào (viết bằng chữ Việt), "tip" là cách sửa một câu tiếng Việt thật đơn giản (kèm cách đọc bồi). Chỉ liệt kê khi thật sự nghe ra lỗi. Nếu lượt của bé là chữ gõ (không có âm thanh) hoặc bé đọc tốt thì để mảng rỗng.
 - Khi bé phát âm sai một từ, trong lời đáp hãy đọc mẫu từ đó rồi mời bé nói lại, trước khi sang nội dung mới.
+- Mỗi lượt, chọn tối đa 3 từ hoặc cụm từ tiếng Anh quan trọng trong "reply_en" để dạy bé trong "vocab". Mỗi mục có dạng {"en","vi","ipa","say","tip"}: "en" phải xuất hiện nguyên văn trong "reply_en"; "vi" là nghĩa tiếng Việt, nên xuất hiện nguyên văn trong "reply_vi"; "ipa" là phiên âm IPA đặt giữa hai dấu /; "say" là cách đọc bồi bằng chữ Việt (ví dụ: "két"); "tip" là mẹo một câu tiếng Việt về âm khó nhất của từ đó (có thể để rỗng). Ưu tiên từ mới hoặc từ bé hay đọc sai.
 - Luôn khen và khích lệ. Không hỏi thông tin cá nhân (họ tên, địa chỉ, trường học, số điện thoại). Nội dung phải an toàn cho trẻ em; nếu bé nói điều không phù hợp thì chuyển chủ đề nhẹ nhàng.
 - Nếu không nghe rõ âm thanh, để "heard" rỗng và nhờ bé nói lại.
 Chỉ trả về JSON đúng dạng:
-{"heard":"nguyên văn điều bé vừa nói, đúng ngôn ngữ bé nói","correction":"","pronunciation":[{"word":"","said":"","tip":""}],"reply_en":"","reply_vi":"","hint":"một câu tiếng Anh ngắn bé có thể nói tiếp","step":0}`;
+{"heard":"nguyên văn điều bé vừa nói, đúng ngôn ngữ bé nói","correction":"","pronunciation":[{"word":"","said":"","tip":""}],"reply_en":"","reply_vi":"","hint":"một câu tiếng Anh ngắn bé có thể nói tiếp","step":0,"vocab":[{"en":"","vi":"","ipa":"","say":"","tip":""}],"teach":null hoặc {"vi":"","en":"","explain_vi":"","map":[{"vi":"","en":"","ipa":"","say":"","tip":""}]}}`;
 }
 
 async function chatCall(userParts){
@@ -723,8 +757,72 @@ function addBubble(kind, text){
   d.appendChild(t); log.appendChild(d); log.scrollTop = log.scrollHeight;
   return d;
 }
-function updateChild(b, heard, correction, pron){
-  b.querySelector(".btxt").textContent = "🗣 " + heard;
+/* Gạch dưới (tô màu) các từ trong câu; mỗi từ có màu riêng theo vị trí trong danh sách words */
+function markSentence(text, words){
+  text = String(text || "");
+  const frag = document.createDocumentFragment();
+  const lower = text.toLowerCase();
+  const ranges = [];
+  (words || []).forEach((x,i)=>{
+    if(!x || !x.w) return;
+    const w = String(x.w).toLowerCase();
+    const p = lower.indexOf(w);
+    if(p >= 0) ranges.push({s:p, e:p + w.length, i});
+  });
+  ranges.sort((a,b)=>a.s-b.s);
+  let pos = 0; const clean = [];
+  ranges.forEach(r=>{ if(r.s >= pos){ clean.push(r); pos = r.e; } });
+  let cur = 0;
+  clean.forEach(r=>{
+    if(r.s > cur) frag.appendChild(document.createTextNode(text.slice(cur, r.s)));
+    const sp = document.createElement("span");
+    sp.className = "hl hl" + (r.i % 5);
+    sp.textContent = text.slice(r.s, r.e);
+    frag.appendChild(sp);
+    cur = r.e;
+  });
+  if(cur < text.length) frag.appendChild(document.createTextNode(text.slice(cur)));
+  return frag;
+}
+function speakWord(w){
+  stopAllSpeech();
+  if(!("speechSynthesis" in window)) return;
+  const u = mkUtter(String(w), "en-US"); u.rate = 0.65;
+  speechSynthesis.speak(u);
+}
+/* Một dòng dạy từ: từ Việt → từ Anh, phiên âm IPA, cách đọc bồi, mẹo, nút nghe riêng từ đó */
+function wordRow(e, i){
+  const row = document.createElement("div"); row.className = "wordrow";
+  const pair = document.createElement("span");
+  if(e.vi){
+    const a = document.createElement("span"); a.className = "hl hl" + (i % 5); a.textContent = e.vi;
+    pair.appendChild(a); pair.appendChild(document.createTextNode("  →  "));
+  }
+  const b = document.createElement("span"); b.className = "hl hl" + (i % 5); b.textContent = e.en;
+  pair.appendChild(b);
+  row.appendChild(pair);
+  const bits = [];
+  if(e.ipa) bits.push(e.ipa);
+  if(e.say) bits.push("đọc: “" + e.say + "”");
+  if(bits.length){
+    const p = document.createElement("span"); p.className = "wr-pron"; p.textContent = bits.join("  ·  ");
+    row.appendChild(p);
+  }
+  const btn = document.createElement("button"); btn.className = "mini"; btn.textContent = "🔊";
+  btn.onclick = ()=> speakWord(e.en);
+  row.appendChild(btn);
+  if(e.tip){
+    const t = document.createElement("div"); t.className = "wr-tip"; t.textContent = "💡 " + e.tip;
+    row.appendChild(t);
+  }
+  return row;
+}
+function updateChild(b, heard, correction, pron, teach){
+  const bt = b.querySelector(".btxt");
+  bt.textContent = "";
+  bt.appendChild(document.createTextNode("🗣 "));
+  const tm = (teach && Array.isArray(teach.map)) ? teach.map : [];
+  bt.appendChild(markSentence(heard, tm.map(m=>({w:(m && m.vi) || ""}))));
   if(correction){
     const c = document.createElement("div"); c.className = "bfix"; c.textContent = "✏️ " + correction;
     b.appendChild(c);
@@ -746,14 +844,52 @@ function addAgent(r){
   const d = document.createElement("div"); d.className = "bubble agent";
   const main = document.createElement("div"); main.className = "btxt";
   const sub = document.createElement("div"); sub.className = "bsub";
+  const vocab = (Array.isArray(r.vocab) ? r.vocab : []).filter(v=>v && v.en).slice(0,3);
+  const enMarks = vocab.map(v=>({w:v.en}));
+  const viMarks = vocab.map(v=>({w:v.vi || ""}));
+  const setMarked = (el, prefix, text, marks)=>{
+    el.textContent = "";
+    if(prefix) el.appendChild(document.createTextNode(prefix));
+    el.appendChild(markSentence(text, marks));
+  };
   if(mix==="vi_mostly"){
-    main.textContent = "🦊 " + (r.reply_vi||"");
-    sub.textContent = "🇬🇧 " + (r.reply_en||""); sub.classList.add("strong");
+    setMarked(main, "🦊 ", r.reply_vi || "", viMarks);
+    setMarked(sub, "🇬🇧 ", r.reply_en || "", enMarks); sub.classList.add("strong");
   }else{
-    main.textContent = "🦊 " + (r.reply_en||"");
-    sub.textContent = r.reply_vi || "";
+    setMarked(main, "🦊 ", r.reply_en || "", enMarks);
+    setMarked(sub, "", r.reply_vi || "", viMarks);
+  }
+  if(r.teach && r.teach.en){
+    const tb = document.createElement("div"); tb.className = "teachbox";
+    const t1 = document.createElement("div"); t1.className = "teach-en";
+    const tmap = (Array.isArray(r.teach.map) ? r.teach.map : []).filter(m=>m && m.en).slice(0,5);
+    if(r.teach.vi){
+      const t0 = document.createElement("div"); t0.className = "teach-vi";
+      t0.appendChild(document.createTextNode("🇻🇳 "));
+      t0.appendChild(markSentence(r.teach.vi, tmap.map(m=>({w:m.vi || ""}))));
+      tb.appendChild(t0);
+    }
+    t1.appendChild(document.createTextNode("🇬🇧 Nói thế này nhé: "));
+    t1.appendChild(markSentence(r.teach.en, tmap.map(m=>({w:m.en}))));
+    tb.appendChild(t1);
+    tmap.forEach((m,i)=> tb.appendChild(wordRow(m, i)));
+    if(r.teach.explain_vi){
+      const ex = document.createElement("div"); ex.className = "teach-ex";
+      ex.textContent = r.teach.explain_vi;
+      tb.appendChild(ex);
+    }
+    const tbtn = document.createElement("button"); tbtn.className = "mini"; tbtn.style.marginTop = "6px";
+    tbtn.textContent = "🔊 Nghe câu tiếng Anh";
+    tbtn.onclick = ()=>{ stopAllSpeech(); speakSegments([[r.teach.en,"en"]], chatPlayToken); };
+    tb.appendChild(tbtn);
+    d.appendChild(tb);
   }
   d.appendChild(main); d.appendChild(sub);
+  if(vocab.length){
+    const vb = document.createElement("div"); vb.className = "vocabbox";
+    vocab.forEach((v,i)=> vb.appendChild(wordRow(v, i)));
+    d.appendChild(vb);
+  }
   const curScene = getScene();
   if(curScene && parseInt(r.step,10) > 0){
     const chip = document.createElement("div"); chip.className = "stepchip";
@@ -783,14 +919,132 @@ function mkUtter(text, lang){
   if(v) u.voice = v;
   return u;
 }
-function speakChat(r){
+/* --- giọng đọc Gemini TTS (đọc tiếng Việt và tiếng Anh bằng đúng giọng) --- */
+const ttsEl = new Audio();
+const ttsCache = new Map();
+let chatPlayToken = 0;
+let warnedNoVi = false;
+
+function pcmToWav(pcm, rate){
+  const dv = new DataView(new ArrayBuffer(44 + pcm.length));
+  const w = (o,s)=>{ for(let i=0;i<s.length;i++) dv.setUint8(o+i, s.charCodeAt(i)); };
+  w(0,"RIFF"); dv.setUint32(4, 36 + pcm.length, true); w(8,"WAVE"); w(12,"fmt ");
+  dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+  dv.setUint32(24,rate,true); dv.setUint32(28,rate*2,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true);
+  w(36,"data"); dv.setUint32(40, pcm.length, true);
+  new Uint8Array(dv.buffer, 44).set(pcm);
+  return dv.buffer;
+}
+function stopAllSpeech(){
+  chatPlayToken++;
+  try{ ttsEl.pause(); }catch(e){}
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+}
+/* Gọi trong thao tác bấm của bé để trình duyệt (nhất là Safari/iPhone) cho phép phát tiếng sau đó */
+function unlockAudio(){
+  try{
+    ttsEl.src = URL.createObjectURL(new Blob([pcmToWav(new Uint8Array(3200),16000)], {type:"audio/wav"}));
+    const p = ttsEl.play(); if(p && p.catch) p.catch(()=>{});
+  }catch(e){}
+}
+async function geminiTTS(text, lang){
+  const ck = lang + "|" + text;
+  if(ttsCache.has(ck)) return ttsCache.get(ck);
+  const key = safeGet(API_KEY,"");
+  const model = safeGet(TTSMODEL_KEY,"") || "gemini-3.1-flash-tts-preview";
+  const voice = safeGet(VOICE_KEY,"") || "Kore";
+  const style = lang==="vi"
+    ? "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in Vietnamese: "
+    : "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in American English: ";
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      contents:[{parts:[{text: style + text}]}],
+      generationConfig:{
+        responseModalities:["AUDIO"],
+        speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}
+      }
+    })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data?.error?.message || ("HTTP "+res.status));
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const part = parts.find(p=>p.inlineData || p.inline_data);
+  const inl = part && (part.inlineData || part.inline_data);
+  if(!inl || !inl.data) throw new Error("Không nhận được âm thanh");
+  const mime = inl.mimeType || inl.mime_type || "";
+  const bin = atob(inl.data);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  let blob;
+  if(/wav|mp3|mpeg|ogg|aac/i.test(mime) && !/pcm|L16/i.test(mime)){
+    blob = new Blob([bytes], {type:mime});
+  }else{
+    const rate = parseInt((mime.match(/rate=(\d+)/)||[])[1],10) || 24000;
+    blob = new Blob([pcmToWav(bytes, rate)], {type:"audio/wav"});
+  }
+  const u = URL.createObjectURL(blob);
+  ttsCache.set(ck, u);
+  return u;
+}
+function playUrl(url){
+  return new Promise(res=>{
+    ttsEl.onended = ()=>res();
+    ttsEl.onerror = ()=>res();
+    ttsEl.src = url;
+    const p = ttsEl.play(); if(p && p.catch) p.catch(()=>res());
+  });
+}
+function speakBrowser(segs){
   if(!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
-  const mix = $("chatMix").value, q = [];
-  if(mix==="both") q.push([r.reply_en,"en-US"],[r.reply_vi,"vi-VN"]);
-  else if(mix==="en_mostly") q.push([r.reply_en,"en-US"]);
-  else q.push([r.reply_vi,"vi-VN"],[r.reply_en,"en-US"]);
-  q.forEach(([t,l])=>{ if(t) speechSynthesis.speak(mkUtter(t,l)); });
+  const hasVi = speechSynthesis.getVoices().some(v=>/^vi/i.test(v.lang));
+  segs.forEach(([t,l])=>{
+    if(l==="vi" && !hasVi){
+      if(!warnedNoVi){
+        warnedNoVi = true;
+        toast("Thiết bị chưa có giọng tiếng Việt nên Mimi không đọc phần tiếng Việt. Hãy chọn Giọng Gemini trong ⚙️.");
+      }
+      return;
+    }
+    speechSynthesis.speak(mkUtter(t, l==="vi" ? "vi-VN" : "en-US"));
+  });
+}
+async function speakSegments(segs, token){
+  const mode = safeGet(TTS_KEY,"") || "gemini";
+  if(mode==="browser" || !safeGet(API_KEY,"")){ speakBrowser(segs); return; }
+  try{
+    const urls = await Promise.all(segs.map(([t,l])=>geminiTTS(t,l)));
+    for(const u of urls){
+      if(token !== chatPlayToken) return;
+      await playUrl(u);
+    }
+  }catch(e){
+    console.error(e);
+    if(token === chatPlayToken){
+      toast("Giọng Gemini chưa dùng được, tạm dùng giọng trình duyệt. (" + (e.message || e) + ")");
+      speakBrowser(segs);
+    }
+  }
+}
+function chatSegments(r){
+  const mix = $("chatMix").value, segs = [];
+  if(r.teach && r.teach.en){
+    if(r.teach.explain_vi) segs.push([r.teach.explain_vi,"vi"]);
+    segs.push([r.teach.en,"en"]);
+  }
+  if(mix==="both") segs.push([r.reply_en,"en"],[r.reply_vi,"vi"]);
+  else if(mix==="en_mostly") segs.push([r.reply_en,"en"]);
+  else segs.push([r.reply_vi,"vi"],[r.reply_en,"en"]);
+  return segs.filter(s=>s[0]);
+}
+async function speakChat(r){
+  stopAllSpeech();
+  const token = chatPlayToken;
+  const segs = chatSegments(r);
+  if(segs.length) await speakSegments(segs, token);
 }
 
 /* --- gửi một lượt nói chuyện --- */
@@ -806,9 +1060,10 @@ async function chatSend(parts, opt){
   try{
     const r = await chatCall(parts);
     const heard = (opt.typed || r.heard || "").trim();
-    if(cb) updateChild(cb, heard || "(Mimi chưa nghe rõ)", (r.correction||"").trim(), opt.typed ? [] : r.pronunciation);
+    if(cb) updateChild(cb, heard || "(Mimi chưa nghe rõ)", (r.correction||"").trim(), opt.typed ? [] : r.pronunciation, r.teach);
     chatHistory.push({role:"user", text: opt.silent ? "(Hãy chào bé trước)" : (heard || "(không rõ)")});
-    chatHistory.push({role:"model", text: (r.reply_en||"") + " / " + (r.reply_vi||"")});
+    chatHistory.push({role:"model", text: (r.reply_en||"") + " / " + (r.reply_vi||"") +
+      (r.teach && r.teach.en ? " [Mimi vừa dạy bé nói: " + r.teach.en + "]" : "")});
     addAgent(r);
     speakChat(r);
   }catch(e){
@@ -832,7 +1087,7 @@ async function chatMicToggle(){
   if(chatBusy) return;
   if(chatRecording){ chatStop(); return; }
   if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
-  if("speechSynthesis" in window) speechSynthesis.cancel();
+  stopAllSpeech();
   try{
     chatStream = await navigator.mediaDevices.getUserMedia({audio:true});
   }catch(e){
@@ -869,19 +1124,21 @@ async function onChatRecStop(){
 function chatReset(){
   chatHistory = [];
   $("chatLog").innerHTML = "";
-  if("speechSynthesis" in window) speechSynthesis.cancel();
+  stopAllSpeech();
   chatEmpty();
 }
 function sendTyped(){
+  unlockAudio();
   const v = $("chatText").value.trim();
   if(!v) return;
   $("chatText").value = "";
   chatSend([{text:v}], {typed:v});
 }
-$("btnChatMic").onclick = chatMicToggle;
+$("btnChatMic").onclick = ()=>{ unlockAudio(); chatMicToggle(); };
 $("chatSend").onclick = sendTyped;
 $("chatText").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendTyped(); } });
 $("chatStartBtn").onclick = ()=>{
+  unlockAudio();
   if(chatBusy) return;
   if(chatHistory.length) chatReset();
   chatSend([{text:"(Hãy chào bé thật vui và hỏi một câu đơn giản để bắt đầu.)"}], {silent:true});
