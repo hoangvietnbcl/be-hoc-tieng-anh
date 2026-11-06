@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bé học tiếng Anh</title>
+<style>
+  :root{
+    --bg:#fff8e7; --card:#ffffff; --ink:#2b2d42; --muted:#6b7280;
+    --primary:#ff7a59; --primary-d:#e8603f; --green:#2fbf71; --blue:#4d9de0; --yellow:#ffc93c; --red:#ef476f;
+    --radius:24px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Comic Sans MS",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--yellow)}
+  header h1{margin:0;font-size:22px}
+  .total{font-weight:700;font-size:18px}
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:999px;font-weight:700;font-size:16px;padding:12px 20px;transition:transform .1s}
+  button:active{transform:scale(.95)}
+  .ghost{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.12)}
+  main{max-width:720px;margin:0 auto;padding:16px}
+  .topics{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+  .topics button{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.12);padding:8px 16px}
+  .topics button.on{background:var(--blue);color:#fff}
+  .modes{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+  .modes button{padding:8px 16px;background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+  .modes button.on{background:var(--green);color:#fff}
+  .card{background:var(--card);border-radius:var(--radius);padding:26px 20px;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.08)}
+  .emoji{font-size:110px;line-height:1.1}
+  .en{font-size:48px;font-weight:800;color:var(--primary);margin:6px 0 0;min-height:58px}
+  .vi{font-size:26px;color:var(--muted);margin:4px 0 14px;min-height:34px}
+  .hidden-word{filter:blur(12px);user-select:none}
+  .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+  .btn-listen{background:var(--blue);color:#fff}
+  .btn-reveal{background:var(--yellow);color:var(--ink)}
+  .btn-mic{background:var(--primary);color:#fff;font-size:22px;padding:16px 30px}
+  .btn-mic.rec{background:var(--red);animation:pulse 1s infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 14px rgba(239,71,111,.25)}}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .nav button{background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+  .count{color:var(--muted);font-weight:700}
+  .result{margin-top:16px;background:#f0fbf4;border:3px dashed var(--green);border-radius:18px;padding:14px;text-align:left;display:none}
+  .result.show{display:block}
+  .result.warn{background:#fff4f4;border-color:var(--red)}
+  .stars{font-size:34px;text-align:center;letter-spacing:4px}
+  .result p{margin:6px 0;font-size:17px;line-height:1.45}
+  .result .label{font-weight:700}
+  .loading{display:none;margin-top:14px;font-size:18px;color:var(--muted)}
+  .loading.show{display:block}
+  dialog{border:none;border-radius:var(--radius);padding:22px;max-width:440px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  dialog h2{margin-top:0}
+  label{display:block;font-weight:700;margin:12px 0 4px}
+  input{width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:12px;font-size:16px;font-family:inherit}
+  .small{font-size:13px;color:var(--muted);line-height:1.4}
+  .dlg-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .primary{background:var(--primary);color:#fff}
+  .addrow{display:grid;grid-template-columns:70px 1fr 1fr;gap:6px}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;display:none;z-index:9}
+  select{width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:12px;font-size:16px;font-family:inherit;background:#fff}
+  .planbar{text-align:center;margin-bottom:12px}
+  .planbar .small{margin-top:6px;font-size:14px}
+  button:disabled{opacity:.6;cursor:wait}
+  .chatsettings{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;text-align:left;margin-bottom:10px}
+  .chatsettings label{margin:4px 0 2px;font-size:14px}
+  .chatlog{height:340px;overflow-y:auto;background:#fffdf6;border:3px solid #f3e6c4;border-radius:18px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:10px}
+  .chatempty{color:var(--muted);text-align:center;margin:auto;font-size:17px}
+  .bubble{max-width:88%;padding:10px 14px;border-radius:18px;font-size:18px;line-height:1.4}
+  .bubble.agent{align-self:flex-start;background:#fff1d6;border-bottom-left-radius:4px}
+  .bubble.child{align-self:flex-end;background:#dcefff;border-bottom-right-radius:4px}
+  .bubble .btxt{font-weight:700}
+  .bubble .bsub{color:var(--muted);font-size:16px;margin-top:2px}
+  .bubble .bsub.strong{color:var(--primary-d);font-weight:700}
+  .bubble .bfix{margin-top:6px;background:#fff;border-radius:12px;padding:6px 10px;font-size:15px;color:var(--red);font-weight:600}
+  .bact{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .mini{font-size:14px;padding:6px 12px;background:#fff;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+  .mini.hint{color:var(--green)}
+  .chattext{display:flex;gap:8px;margin:10px 0}
+  .chattext input{flex:1}
+  .bubble .bpron{margin-top:6px;background:#fff;border-radius:12px;padding:6px 10px;font-size:15px;color:#b45309;font-weight:600;display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .bubble .stepchip{display:inline-block;margin-top:6px;background:#fff;border-radius:999px;padding:2px 10px;font-size:13px;color:var(--muted);font-weight:700}
+  #scenePlan{background:#f6fbff;border:2px solid #cfe6fa;border-radius:14px;padding:8px 12px}
+  #scenePlanBody div{margin:3px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌈 Bé học tiếng Anh</h1>
+  <div>
+    <span class="total" id="totalStars">⭐ 0</span>
+    <button class="ghost" id="btnSettings" title="Cài đặt">⚙️</button>
+  </div>
+</header>
+
+<main>
+  <div id="learnView">
+  <div class="planbar">
+    <button class="primary" id="btnPlan">🧒 Tạo giáo trình theo tuổi của bé</button>
+    <div class="small" id="planInfo"></div>
+  </div>
+  <div class="topics" id="topics"></div>
+  <div class="modes">
+    <button id="modeLearn" class="on">📖 Học từ</button>
+    <button id="modeQuiz">🎯 Đố bé</button>
+    <button id="modeChat">💬 Trò chuyện</button>
+  </div>
+
+  <div class="card">
+    <div class="emoji" id="emoji"></div>
+    <div class="en" id="en"></div>
+    <div class="vi" id="vi"></div>
+
+    <div class="row">
+      <button class="btn-listen" id="btnListen">🔊 Nghe</button>
+      <button class="btn-reveal" id="btnReveal" style="display:none">👀 Xem đáp án</button>
+    </div>
+    <div class="row">
+      <button class="btn-mic" id="btnMic">🎤 Bé nói theo</button>
+    </div>
+    <div class="small" id="hint">Bấm nút micro, nói từ trên màn hình, rồi bấm lại để dừng.</div>
+
+    <div class="loading" id="loading">🤖 Cô giáo đang nghe bé đọc...</div>
+    <div class="result" id="result">
+      <div class="stars" id="rStars"></div>
+      <p id="rPraise"></p>
+      <p><span class="label">🗣 Cô nghe được:</span> <span id="rHeard"></span></p>
+      <p id="rFixWrap"><span class="label">✏️ Sửa lại nhé:</span> <span id="rFix"></span></p>
+      <p><span class="label">💡 Đọc bồi:</span> <span id="rTip"></span></p>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button id="btnPrev">⬅️ Trước</button>
+    <span class="count" id="count"></span>
+    <button id="btnNext">Tiếp ➡️</button>
+  </div>
+  <div class="row" style="margin-top:18px">
+    <button class="ghost" id="btnAdd">➕ Thêm từ mới</button>
+  </div>
+  </div><!-- /learnView -->
+
+  <div id="chatView" style="display:none">
+    <div class="card">
+      <div class="chatsettings">
+        <div>
+          <label for="chatMix">Mimi nói</label>
+          <select id="chatMix">
+            <option value="both">Song ngữ Anh – Việt</option>
+            <option value="en_mostly">Chủ yếu tiếng Anh</option>
+            <option value="vi_mostly">Chủ yếu tiếng Việt (bé mới học)</option>
+          </select>
+        </div>
+        <div>
+          <label for="chatScene">Tình huống</label>
+          <select id="chatScene">
+            <option value="free">Nói chuyện làm quen</option>
+            <option value="lesson">Theo bài đang học</option>
+            <option value="market">Đi chợ mua trái cây</option>
+            <option value="family">Nói về gia đình</option>
+            <option value="animals">Đi sở thú</option>
+            <option value="school">Ở trường</option>
+            <option value="food">Bữa ăn</option>
+          </select>
+        </div>
+        <div>
+          <label for="chatAge">Tuổi của bé</label>
+          <input id="chatAge" type="number" min="2" max="14">
+        </div>
+      </div>
+
+      <div class="chattext">
+        <input id="sceneInput" placeholder="✨ Gõ chủ đề riêng: đi biển, sinh nhật, đi bác sĩ...">
+        <button class="primary" id="sceneCreate">Soạn giáo án</button>
+      </div>
+      <div class="loading" id="sceneStatus"></div>
+      <details id="scenePlan" style="display:none;text-align:left;margin-bottom:10px">
+        <summary id="scenePlanTitle" style="cursor:pointer;font-weight:700"></summary>
+        <div id="scenePlanBody" class="small" style="font-size:15px;margin-top:6px"></div>
+      </details>
+
+      <div class="chatlog" id="chatLog"></div>
+      <div class="loading" id="chatLoading">🦊 Mimi đang nghĩ...</div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn-mic" id="btnChatMic">🎤 Bé nói chuyện</button>
+      </div>
+      <div class="chattext">
+        <input id="chatText" placeholder="Hoặc gõ ở đây (tiếng Anh hoặc tiếng Việt)...">
+        <button class="primary" id="chatSend">Gửi</button>
+      </div>
+      <div class="row">
+        <button class="ghost" id="chatStartBtn">▶ Chào Mimi</button>
+        <button class="ghost" id="chatReset">🔄 Cuộc trò chuyện mới</button>
+      </div>
+      <div class="small">Bấm micro khi Mimi nói xong nhé. Bé có thể nói tiếng Anh, tiếng Việt hoặc trộn cả hai.</div>
+    </div>
+  </div>
+</main>
+
+<dialog id="dlgSettings">
+  <h2>⚙️ Cài đặt (dành cho bố mẹ)</h2>
+  <label for="apiKey">Gemini API key</label>
+  <input id="apiKey" type="password" placeholder="AIza...">
+  <label for="model">Tên model</label>
+  <input id="model" placeholder="gemini-2.5-flash">
+  <p class="small">Key chỉ lưu trong trình duyệt này (localStorage). Lấy key miễn phí tại Google AI Studio. Khi đưa lên mạng cho nhiều người dùng, hãy chuyển lời gọi API sang server của bạn để không lộ key.</p>
+  <div class="dlg-actions">
+    <button class="ghost" id="settingsCancel">Đóng</button>
+    <button class="primary" id="settingsSave">Lưu</button>
+  </div>
+</dialog>
+
+<dialog id="dlgPlan">
+  <h2>🧒 Giáo trình cho bé</h2>
+  <label for="planAge">Bé mấy tuổi?</label>
+  <input id="planAge" type="number" min="2" max="14" placeholder="Ví dụ: 6">
+  <label for="planLevel">Trình độ hiện tại</label>
+  <select id="planLevel">
+    <option value="mới bắt đầu, chưa biết tiếng Anh">Mới bắt đầu</option>
+    <option value="biết một ít từ đơn giản">Biết một ít</option>
+    <option value="khá rồi, đã biết nhiều từ và vài câu ngắn">Khá rồi</option>
+  </select>
+  <label for="planCount">Số bài học</label>
+  <select id="planCount">
+    <option value="5">5 bài</option>
+    <option value="8" selected>8 bài</option>
+    <option value="10">10 bài</option>
+  </select>
+  <label for="planInterests">Bé thích gì? (không bắt buộc)</label>
+  <input id="planInterests" placeholder="khủng long, xe ô tô, công chúa...">
+  <p class="small">Gemini sẽ soạn các bài học từ dễ đến khó, phù hợp độ tuổi. Giáo trình mới sẽ thay giáo trình cũ (từ bé tự thêm vẫn được giữ).</p>
+  <div class="loading" id="planStatus"></div>
+  <div class="dlg-actions">
+    <button class="ghost" id="planCancel">Đóng</button>
+    <button class="primary" id="planCreate">✨ Tạo giáo trình</button>
+  </div>
+</dialog>
+
+<dialog id="dlgAdd">
+  <h2>➕ Thêm từ mới</h2>
+  <div class="addrow">
+    <div><label>Emoji</label><input id="addEmoji" placeholder="🐘" maxlength="4"></div>
+    <div><label>Tiếng Anh</label><input id="addEn" placeholder="elephant"></div>
+    <div><label>Tiếng Việt</label><input id="addVi" placeholder="con voi"></div>
+  </div>
+  <p class="small">Từ mới được lưu vào chủ đề "Từ của bé".</p>
+  <div class="dlg-actions">
+    <button class="ghost" id="addCancel">Đóng</button>
+    <button class="primary" id="addSave">Thêm</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- Dữ liệu từ vựng ---------- */
+const BASE_TOPICS = {
+  "🐶 Con vật": [
+    ["🐶","dog","con chó"],["🐱","cat","con mèo"],["🐘","elephant","con voi"],["🦁","lion","sư tử"],
+    ["🐵","monkey","con khỉ"],["🐰","rabbit","con thỏ"],["🐟","fish","con cá"],["🐦","bird","con chim"]],
+  "🍎 Trái cây": [
+    ["🍎","apple","quả táo"],["🍌","banana","quả chuối"],["🍊","orange","quả cam"],["🍇","grape","quả nho"],
+    ["🍓","strawberry","quả dâu"],["🍉","watermelon","dưa hấu"],["🍍","pineapple","quả dứa"],["🥭","mango","quả xoài"]],
+  "🎨 Màu sắc": [
+    ["🔴","red","màu đỏ"],["🔵","blue","màu xanh dương"],["🟢","green","màu xanh lá"],["🟡","yellow","màu vàng"],
+    ["🟠","orange color","màu cam"],["🟣","purple","màu tím"],["⚫","black","màu đen"],["⚪","white","màu trắng"]],
+  "👨‍👩‍👧 Gia đình": [
+    ["👩","mother","mẹ"],["👨","father","bố"],["👧","sister","chị / em gái"],["👦","brother","anh / em trai"],
+    ["👵","grandmother","bà"],["👴","grandfather","ông"],["👶","baby","em bé"]],
+  "🔢 Số đếm": [
+    ["1️⃣","one","số một"],["2️⃣","two","số hai"],["3️⃣","three","số ba"],["4️⃣","four","số bốn"],
+    ["5️⃣","five","số năm"],["6️⃣","six","số sáu"],["7️⃣","seven","số bảy"],["8️⃣","eight","số tám"],["9️⃣","nine","số chín"],["🔟","ten","số mười"]],
+  "💬 Câu ngắn": [
+    ["👋","Hello!","Xin chào!"],["🙏","Thank you","Cảm ơn"],["😊","How are you?","Bạn khỏe không?"],
+    ["🌞","Good morning","Chào buổi sáng"],["🌙","Good night","Chúc ngủ ngon"],["😢","I am sorry","Mình xin lỗi"]]
+};
+
+const CUSTOM_KEY = "kidsEnglish.custom";
+const STARS_KEY  = "kidsEnglish.stars";
+const API_KEY    = "kidsEnglish.apiKey";
+const MODEL_KEY  = "kidsEnglish.model";
+
+const safeGet = (k,d)=>{ try{ const v=localStorage.getItem(k); return v===null?d:v }catch(e){ return d } };
+const safeSet = (k,v)=>{ try{ localStorage.setItem(k,v) }catch(e){} };
+
+const PLAN_KEY = "kidsEnglish.plan";
+const PROG_KEY = "kidsEnglish.progress";
+const SCENES_KEY = "kidsEnglish.scenes";
+let scenes = [];
+try{ scenes = JSON.parse(safeGet(SCENES_KEY,"[]")) || []; }catch(e){ scenes = []; }
+if(!Array.isArray(scenes)) scenes = [];
+
+let custom = JSON.parse(safeGet(CUSTOM_KEY,"[]"));
+let totalStars = parseInt(safeGet(STARS_KEY,"0"),10) || 0;
+let plan = null;
+try{ plan = JSON.parse(safeGet(PLAN_KEY,"null")); }catch(e){ plan = null; }
+if(!plan || !Array.isArray(plan.lessons) || !plan.lessons.length) plan = null;
+let progress = {};
+try{ progress = JSON.parse(safeGet(PROG_KEY,"{}")) || {}; }catch(e){ progress = {}; }
+let topicId = plan ? "plan:0" : "base:" + Object.keys(BASE_TOPICS)[0];
+let idx = 0;
+let quiz = false;
+let revealed = false;
+
+const $ = id => document.getElementById(id);
+
+function topics(){
+  const t = [];
+  if(plan) plan.lessons.forEach((l,i)=> t.push({id:"plan:"+i, label:"📘 "+(i+1)+". "+l.title, items:l.items, goal:l.goal, plan:true}));
+  Object.keys(BASE_TOPICS).forEach(n=> t.push({id:"base:"+n, label:n, items:BASE_TOPICS[n]}));
+  scenes.forEach((s,i)=> t.push({id:"scene:"+i, label:"✨ "+s.title, items:s.items, goal:s.goal}));
+  if(custom.length) t.push({id:"custom", label:"⭐ Từ của bé", items:custom});
+  return t;
+}
+function currentTopic(){ return topics().find(x=>x.id===topicId); }
+function currentList(){ const t = currentTopic(); return t ? t.items : []; }
+function currentWord(){ return currentList()[idx]; }
+
+/* ---------- Giao diện ---------- */
+function renderTopics(){
+  const box = $("topics"); box.innerHTML = "";
+  topics().forEach(t=>{
+    const b = document.createElement("button");
+    let label = t.label;
+    if(t.plan){
+      const done = t.items.filter(it=>(progress[it[1]]||0)>=4).length;
+      label += done===t.items.length ? " ✅" : " ("+done+"/"+t.items.length+")";
+    }
+    b.textContent = label;
+    if(t.id===topicId) b.className = "on";
+    b.onclick = ()=>{ topicId=t.id; idx=0; render(); renderTopics(); };
+    box.appendChild(b);
+  });
+}
+function render(){
+  if(!currentTopic()) topicId = topics()[0].id;
+  const ct = currentTopic();
+  $("planInfo").textContent = plan
+    ? "Giáo trình cho bé " + plan.age + " tuổi" + (ct && ct.goal ? " – Mục tiêu: " + ct.goal : "")
+    : "Nhập tuổi của bé để Gemini soạn giáo trình riêng.";
+  const list = currentList();
+  if(!list.length){ idx=0; return; }
+  if(idx>=list.length) idx=0;
+  const [emoji,en,vi] = list[idx];
+  revealed = !quiz;
+  $("emoji").textContent = emoji;
+  $("en").textContent = en;
+  $("vi").textContent = vi;
+  $("en").classList.toggle("hidden-word", quiz && !revealed);
+  $("btnReveal").style.display = quiz ? "" : "none";
+  $("hint").textContent = quiz
+    ? "Nhìn hình và nghĩa tiếng Việt, bé thử nói từ tiếng Anh nhé!"
+    : "Bấm nút micro, nói từ trên màn hình, rồi bấm lại để dừng.";
+  $("count").textContent = (idx+1) + " / " + list.length;
+  $("result").classList.remove("show");
+  $("loading").classList.remove("show");
+  $("totalStars").textContent = "⭐ " + totalStars;
+}
+$("btnPrev").onclick = ()=>{ const n=currentList().length; idx=(idx-1+n)%n; render(); };
+$("btnNext").onclick = ()=>{ const n=currentList().length; idx=(idx+1)%n; render(); };
+function setMode(m){
+  quiz = (m==="quiz");
+  $("modeLearn").className = m==="learn" ? "on" : "";
+  $("modeQuiz").className  = m==="quiz"  ? "on" : "";
+  $("modeChat").className  = m==="chat"  ? "on" : "";
+  $("learnView").style.display = m==="chat" ? "none" : "";
+  $("chatView").style.display  = m==="chat" ? "" : "none";
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+  if(m!=="chat") render();
+}
+$("modeLearn").onclick = ()=> setMode("learn");
+$("modeQuiz").onclick  = ()=> setMode("quiz");
+$("modeChat").onclick  = ()=> setMode("chat");
+$("btnReveal").onclick = ()=>{ revealed=true; $("en").classList.remove("hidden-word"); speak(currentWord()[1]); };
+
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.style.display="block";
+  clearTimeout(toast.id); toast.id=setTimeout(()=>t.style.display="none",3500);
+}
+
+/* ---------- Đọc mẫu (text-to-speech của trình duyệt) ---------- */
+function speak(text){
+  if(!("speechSynthesis" in window)){ toast("Trình duyệt chưa hỗ trợ đọc mẫu"); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US"; u.rate = 0.8; u.pitch = 1.1;
+  const v = speechSynthesis.getVoices().find(v=>/^en[-_]US/i.test(v.lang));
+  if(v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+$("btnListen").onclick = ()=> speak(currentWord()[1]);
+
+/* ---------- Ghi âm và chuyển sang WAV 16kHz ---------- */
+let mediaRec=null, chunks=[], stream=null, autoStop=null, recording=false;
+
+async function startRec(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    toast("Không mở được micro. Hãy cho phép quyền micro và mở web bằng https hoặc localhost.");
+    return;
+  }
+  chunks=[]; mediaRec = new MediaRecorder(stream);
+  mediaRec.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data); };
+  mediaRec.onstop = onRecStop;
+  mediaRec.start();
+  recording = true;
+  $("btnMic").classList.add("rec");
+  $("btnMic").textContent = "⏹ Xong rồi";
+  autoStop = setTimeout(()=>{ if(recording) stopRec(); }, 8000);
+}
+function stopRec(){
+  recording=false; clearTimeout(autoStop);
+  $("btnMic").classList.remove("rec");
+  $("btnMic").textContent = "🎤 Bé nói theo";
+  if(mediaRec && mediaRec.state!=="inactive") mediaRec.stop();
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+}
+$("btnMic").onclick = ()=>{
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  recording ? stopRec() : startRec();
+};
+
+async function blobToWav16k(blob){
+  const buf = await blob.arrayBuffer();
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AC();
+  const decoded = await new Promise((res,rej)=> ctx.decodeAudioData(buf,res,rej));
+  ctx.close && ctx.close();
+  const targetRate = 16000;
+  const len = Math.max(1, Math.ceil(decoded.duration * targetRate));
+  const off = new OfflineAudioContext(1, len, targetRate);
+  const src = off.createBufferSource();
+  src.buffer = decoded; src.connect(off.destination); src.start();
+  const rendered = await off.startRendering();
+  const samples = rendered.getChannelData(0);
+  const out = new DataView(new ArrayBuffer(44 + samples.length*2));
+  const w = (o,s)=>{ for(let i=0;i<s.length;i++) out.setUint8(o+i,s.charCodeAt(i)); };
+  w(0,"RIFF"); out.setUint32(4,36+samples.length*2,true); w(8,"WAVE"); w(12,"fmt ");
+  out.setUint32(16,16,true); out.setUint16(20,1,true); out.setUint16(22,1,true);
+  out.setUint32(24,targetRate,true); out.setUint32(28,targetRate*2,true);
+  out.setUint16(32,2,true); out.setUint16(34,16,true); w(36,"data"); out.setUint32(40,samples.length*2,true);
+  for(let i=0;i<samples.length;i++){
+    const s = Math.max(-1,Math.min(1,samples[i]));
+    out.setInt16(44+i*2, s<0 ? s*0x8000 : s*0x7FFF, true);
+  }
+  return new Uint8Array(out.buffer);
+}
+function bytesToBase64(bytes){
+  let bin=""; const step=0x8000;
+  for(let i=0;i<bytes.length;i+=step) bin += String.fromCharCode.apply(null, bytes.subarray(i,i+step));
+  return btoa(bin);
+}
+
+/* ---------- Gọi Gemini để nhận xét phát âm ---------- */
+async function onRecStop(){
+  const blob = new Blob(chunks,{type: mediaRec.mimeType || "audio/webm"});
+  if(blob.size < 1500){ toast("Cô chưa nghe thấy gì, bé thử lại nhé!"); return; }
+  $("loading").classList.add("show");
+  $("result").classList.remove("show");
+  try{
+    const wav = await blobToWav16k(blob);
+    const fb = await askGemini(bytesToBase64(wav), currentWord()[1], currentWord()[2]);
+    showResult(fb);
+  }catch(e){
+    console.error(e);
+    toast("Có lỗi: " + (e.message || e));
+  }finally{
+    $("loading").classList.remove("show");
+  }
+}
+
+async function askGemini(b64, word, vi){
+  const key = safeGet(API_KEY,"");
+  const model = safeGet(MODEL_KEY,"") || "gemini-2.5-flash";
+  const prompt =
+`Bạn là cô giáo tiếng Anh dịu dàng, dạy bé người Việt 5-9 tuổi.
+Bé vừa đọc to từ/câu tiếng Anh: "${word}" (nghĩa tiếng Việt: "${vi}").
+Hãy nghe file âm thanh và đánh giá phát âm của bé.
+Chỉ trả về JSON đúng dạng:
+{"heard": "điều bạn nghe được, viết bằng chữ tiếng Anh (hoặc rỗng nếu không nghe rõ)",
+ "stars": số nguyên 1 đến 5,
+ "praise": "một câu khen ngắn bằng tiếng Việt, vui vẻ, dễ hiểu với bé",
+ "fix": "nếu có lỗi: chỉ rõ âm hoặc từ nào sai và cách sửa bằng tiếng Việt rất đơn giản (1-2 câu). Nếu đọc tốt thì để rỗng",
+ "tip": "cách đọc bồi bằng chữ Việt, ví dụ: ép-pồ"}
+Quy tắc: nếu không nghe thấy tiếng nói hoặc bé nói sai từ hoàn toàn thì cho 1 sao và nhẹ nhàng bảo bé thử lại. Luôn khích lệ, không chê bé.`;
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      contents:[{parts:[{text:prompt},{inline_data:{mime_type:"audio/wav",data:b64}}]}],
+      generationConfig:{responseMimeType:"application/json", temperature:0.3}
+    })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data?.error?.message || ("HTTP "+res.status));
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  const m = text.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error("Không đọc được phản hồi từ AI");
+  return JSON.parse(m[0]);
+}
+
+function showResult(fb){
+  const stars = Math.max(1, Math.min(5, parseInt(fb.stars,10)||1));
+  $("rStars").textContent = "⭐".repeat(stars) + "☆".repeat(5-stars);
+  $("rPraise").textContent = fb.praise || "";
+  $("rHeard").textContent = fb.heard || "(chưa nghe rõ)";
+  $("rFix").textContent = fb.fix || "";
+  $("rFixWrap").style.display = fb.fix ? "" : "none";
+  $("rTip").textContent = fb.tip || "";
+  $("result").classList.toggle("warn", stars<=2);
+  $("result").classList.add("show");
+  const cw = currentWord();
+  if(cw && (progress[cw[1]]||0) < stars){
+    progress[cw[1]] = stars; safeSet(PROG_KEY, JSON.stringify(progress)); renderTopics();
+  }
+  if(stars>=4){
+    totalStars += stars - 3;  // 4 sao +1, 5 sao +2
+    safeSet(STARS_KEY, String(totalStars));
+    $("totalStars").textContent = "⭐ " + totalStars;
+  }
+  if(quiz){ revealed=true; $("en").classList.remove("hidden-word"); }
+}
+
+/* ---------- Cài đặt ---------- */
+function openSettings(){
+  $("apiKey").value = safeGet(API_KEY,"");
+  $("model").value = safeGet(MODEL_KEY,"") || "gemini-2.5-flash";
+  $("dlgSettings").showModal();
+}
+$("btnSettings").onclick = openSettings;
+$("settingsCancel").onclick = ()=> $("dlgSettings").close();
+$("settingsSave").onclick = ()=>{
+  safeSet(API_KEY, $("apiKey").value.trim());
+  safeSet(MODEL_KEY, $("model").value.trim());
+  $("dlgSettings").close(); toast("Đã lưu cài đặt");
+};
+
+/* ---------- Thêm từ ---------- */
+$("btnAdd").onclick = ()=> $("dlgAdd").showModal();
+$("addCancel").onclick = ()=> $("dlgAdd").close();
+$("addSave").onclick = ()=>{
+  const e=$("addEmoji").value.trim()||"⭐", en=$("addEn").value.trim(), vi=$("addVi").value.trim();
+  if(!en||!vi){ toast("Nhập đủ tiếng Anh và tiếng Việt nhé"); return; }
+  custom.push([e,en,vi]); safeSet(CUSTOM_KEY, JSON.stringify(custom));
+  $("addEmoji").value=$("addEn").value=$("addVi").value="";
+  $("dlgAdd").close();
+  topicId = "custom"; idx = custom.length-1;
+  renderTopics(); render(); toast("Đã thêm từ mới");
+};
+
+/* ---------- Gemini soạn giáo trình theo tuổi ---------- */
+async function geminiJSON(prompt, temperature){
+  const key = safeGet(API_KEY,"");
+  const model = safeGet(MODEL_KEY,"") || "gemini-2.5-flash";
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      contents:[{parts:[{text:prompt}]}],
+      generationConfig:{responseMimeType:"application/json", temperature:temperature}
+    })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data?.error?.message || ("HTTP "+res.status));
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  const m = text.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error("Không đọc được phản hồi từ AI, hãy thử lại");
+  return JSON.parse(m[0]);
+}
+
+async function generatePlan(age, interests, level, count){
+  const prompt =
+`Bạn là chuyên gia dạy tiếng Anh cho trẻ em Việt Nam.
+Hãy soạn giáo trình tiếng Anh cho một bé ${age} tuổi, trình độ: ${level}.
+${interests ? "Bé thích: " + interests + ". Hãy lồng ghép sở thích này vào một số bài.\n" : ""}Yêu cầu:
+- Gồm đúng ${count} bài, đi từ dễ đến khó, bài sau nâng độ khó nhẹ nhàng.
+- Mỗi bài có đúng 8 mục (items). Tùy tuổi mà chọn nội dung:
+  + 2-4 tuổi: từ đơn rất quen thuộc, ngắn, dễ phát âm (con vật, đồ chơi, đồ ăn, màu, số).
+  + 5-7 tuổi: từ đơn đa dạng hơn và cụm từ ngắn, chào hỏi đơn giản.
+  + 8-10 tuổi: cụm từ và câu ngắn dùng hằng ngày (giới thiệu bản thân, trường lớp, sở thích).
+  + 11-14 tuổi: câu hoàn chỉnh, hội thoại ngắn, từ vựng học đường và đời sống.
+- Với bé từ 5 tuổi, mỗi bài nên có 1-2 mục cuối là câu ngắn dùng lại các từ vừa học.
+- Mỗi mục có: "emoji" (một emoji hợp nghĩa), "en" (tiếng Anh chuẩn, ngắn gọn, dễ đọc to), "vi" (nghĩa tiếng Việt ngắn).
+- Không lặp lại cùng một từ giữa các bài. Nội dung an toàn, phù hợp trẻ em.
+- "title": tên bài bằng tiếng Việt, ngắn, vui. "goal": mục tiêu bài học bằng tiếng Việt, một câu ngắn.
+- "summary": 1-2 câu tiếng Việt nói về hướng đi của giáo trình.
+Chỉ trả về JSON đúng dạng:
+{"summary":"...","lessons":[{"title":"...","goal":"...","items":[{"emoji":"🐶","en":"dog","vi":"con chó"}]}]}`;
+  const data = await geminiJSON(prompt, 0.7);
+  const lessons = (Array.isArray(data.lessons) ? data.lessons : []).map(l=>({
+    title: String(l.title||"").trim(),
+    goal: String(l.goal||"").trim(),
+    items: (Array.isArray(l.items) ? l.items : [])
+      .filter(it=>it && it.en && it.vi)
+      .map(it=>[String(it.emoji||"⭐").trim(), String(it.en).trim(), String(it.vi).trim()])
+  })).filter(l=>l.title && l.items.length);
+  if(!lessons.length) throw new Error("AI chưa trả về giáo trình hợp lệ, hãy thử lại");
+  return {age, interests, summary: String(data.summary||"").trim(), lessons};
+}
+
+$("btnPlan").onclick = ()=>{
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  if(plan){ $("planAge").value = plan.age; $("planInterests").value = plan.interests || ""; }
+  $("planStatus").classList.remove("show");
+  $("dlgPlan").showModal();
+};
+$("planCancel").onclick = ()=> $("dlgPlan").close();
+$("planCreate").onclick = async ()=>{
+  const age = parseInt($("planAge").value,10);
+  if(!(age>=2 && age<=14)){ toast("Nhập tuổi của bé từ 2 đến 14 nhé"); return; }
+  const btn = $("planCreate"), st = $("planStatus");
+  btn.disabled = true;
+  st.textContent = "🤖 Gemini đang soạn giáo trình, đợi một chút nhé...";
+  st.classList.add("show");
+  try{
+    const p = await generatePlan(age, $("planInterests").value.trim(), $("planLevel").value, parseInt($("planCount").value,10));
+    plan = p; safeSet(PLAN_KEY, JSON.stringify(plan));
+    progress = {}; safeSet(PROG_KEY, "{}");
+    topicId = "plan:0"; idx = 0;
+    $("dlgPlan").close();
+    renderTopics(); render();
+    toast(p.summary || "Đã tạo giáo trình mới!");
+  }catch(e){
+    console.error(e);
+    st.textContent = "Có lỗi: " + (e.message || e);
+  }finally{
+    btn.disabled = false;
+  }
+};
+
+/* ---------- Trò chuyện với Mimi (agent song ngữ) ---------- */
+const SCENARIOS = {
+  free:    "trò chuyện làm quen, hỏi bé thích gì (màu sắc, con vật, đồ ăn) rồi chia sẻ lại một cách vui vẻ",
+  lesson:  "luyện nói xoay quanh các từ của bài bé đang học",
+  market:  "đóng vai người bán trái cây ở chợ, bé là người mua",
+  family:  "trò chuyện về các thành viên trong gia đình bé (chỉ nói về vai vế như mẹ, bố, ông, bà; không hỏi tên thật hay địa chỉ)",
+  animals: "cùng bé đi sở thú và nói về các con vật",
+  school:  "nói về đồ dùng học tập và hoạt động ở trường (không hỏi tên trường)",
+  food:    "nói về bữa ăn, món ăn và đồ uống bé thích"
+};
+const MIX_DESC = {
+  both:      "Song ngữ: \"reply_en\" là câu tiếng Anh, \"reply_vi\" là bản dịch tiếng Việt tương ứng.",
+  en_mostly: "Chủ yếu tiếng Anh: \"reply_en\" là lời nói chính; \"reply_vi\" chỉ là bản dịch ngắn để bé hiểu.",
+  vi_mostly: "Chủ yếu tiếng Việt cho bé mới bắt đầu: \"reply_vi\" là lời nói chính bằng tiếng Việt thân thiện; \"reply_en\" là một từ/câu tiếng Anh rất ngắn để bé học nói theo."
+};
+
+let chatHistory = [], chatBusy = false;
+let chatRecorder = null, chatChunks = [], chatStream = null, chatRecording = false, chatTimer = null;
+
+function chatSystem(){
+  const age = parseInt($("chatAge").value,10) || 6;
+  const sc = $("chatScene").value, mix = $("chatMix").value;
+  let scene = SCENARIOS[sc] || "";
+  const cs = getScene();
+  if(cs){
+    scene = cs.scene + " Mục tiêu: " + cs.goal + ". Từ/câu cần dạy: " +
+      cs.items.map(i=>i[1]+" ("+i[2]+")").join(", ") +
+      ". Các bước hội thoại (đi lần lượt, mỗi lượt một bước): " +
+      cs.steps.map((s,i)=>(i+1)+") "+s).join(" ") +
+      " Khi bé hoàn thành một bước thì sang bước kế tiếp; nếu bé nói sai thì luyện lại ngay bước đó; xong hết các bước thì khen và tổng kết bé đã học được gì. Trong JSON, \"step\" là số thứ tự bước đang thực hiện (từ 1 đến " + cs.steps.length + ").";
+  }else if(sc==="lesson"){
+    const words = currentList().slice(0,10).map(i=>i[1]+" ("+i[2]+")").join(", ");
+    scene += ". Các từ/câu của bài: " + words;
+  }
+  return `Bạn là Mimi, một chú cáo thân thiện, là bạn học tiếng Anh của một bé ${age} tuổi người Việt. Bạn đang trò chuyện bằng giọng nói với bé.
+Tình huống: ${scene}.
+Cách nói: ${MIX_DESC[mix]}
+Quy tắc:
+- Câu thật ngắn, từ đơn giản, hợp với bé ${age} tuổi (bé nhỏ: 3-6 từ mỗi câu; bé lớn: tối đa 12 từ).
+- Mỗi lượt chỉ hỏi MỘT câu hỏi đơn giản để bé trả lời.
+- Bé có thể nói tiếng Anh, tiếng Việt hoặc trộn cả hai. Nếu bé nói tiếng Việt, hãy hiểu, trả lời và nhẹ nhàng dạy bé cách nói câu đó bằng tiếng Anh.
+- Nếu bé nói tiếng Anh sai (từ, ngữ pháp), nhắc nhẹ nhàng bằng tiếng Việt trong "correction" kèm câu đúng. Chỉ sửa lỗi quan trọng nhất. Nếu bé nói đúng thì để rỗng.
+- Nghe kỹ PHÁT ÂM tiếng Anh của bé. Liệt kê tối đa 2 từ bé phát âm chưa chuẩn trong "pronunciation": "word" là từ đúng, "said" là bé đọc nghe giống như thế nào (viết bằng chữ Việt), "tip" là cách sửa một câu tiếng Việt thật đơn giản (kèm cách đọc bồi). Chỉ liệt kê khi thật sự nghe ra lỗi. Nếu lượt của bé là chữ gõ (không có âm thanh) hoặc bé đọc tốt thì để mảng rỗng.
+- Khi bé phát âm sai một từ, trong lời đáp hãy đọc mẫu từ đó rồi mời bé nói lại, trước khi sang nội dung mới.
+- Luôn khen và khích lệ. Không hỏi thông tin cá nhân (họ tên, địa chỉ, trường học, số điện thoại). Nội dung phải an toàn cho trẻ em; nếu bé nói điều không phù hợp thì chuyển chủ đề nhẹ nhàng.
+- Nếu không nghe rõ âm thanh, để "heard" rỗng và nhờ bé nói lại.
+Chỉ trả về JSON đúng dạng:
+{"heard":"nguyên văn điều bé vừa nói, đúng ngôn ngữ bé nói","correction":"","pronunciation":[{"word":"","said":"","tip":""}],"reply_en":"","reply_vi":"","hint":"một câu tiếng Anh ngắn bé có thể nói tiếp","step":0}`;
+}
+
+async function chatCall(userParts){
+  const key = safeGet(API_KEY,"");
+  const model = safeGet(MODEL_KEY,"") || "gemini-2.5-flash";
+  let hist = chatHistory.slice(-12);
+  while(hist.length && hist[0].role!=="user") hist.shift();
+  const contents = hist.map(h=>({role:h.role, parts:[{text:h.text}]}));
+  contents.push({role:"user", parts:userParts});
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+  const res = await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      system_instruction:{parts:[{text:chatSystem()}]},
+      contents,
+      generationConfig:{responseMimeType:"application/json", temperature:0.8}
+    })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data?.error?.message || ("HTTP "+res.status));
+  const text = data?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("") || "";
+  const m = text.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error("Không đọc được phản hồi từ AI, hãy thử lại");
+  const r = JSON.parse(m[0]);
+  if(!r.reply_en && !r.reply_vi) throw new Error("Mimi chưa trả lời được, bé thử lại nhé");
+  return r;
+}
+
+/* --- giao diện hội thoại --- */
+function chatEmpty(){
+  const d = document.createElement("div");
+  d.className = "chatempty";
+  d.textContent = "Bấm ▶ Chào Mimi hoặc bấm micro để bắt đầu nói chuyện nhé! 🦊";
+  $("chatLog").appendChild(d);
+}
+function addBubble(kind, text){
+  const log = $("chatLog");
+  const empty = log.querySelector(".chatempty"); if(empty) empty.remove();
+  const d = document.createElement("div"); d.className = "bubble " + kind;
+  const t = document.createElement("div"); t.className = "btxt"; t.textContent = text;
+  d.appendChild(t); log.appendChild(d); log.scrollTop = log.scrollHeight;
+  return d;
+}
+function updateChild(b, heard, correction, pron){
+  b.querySelector(".btxt").textContent = "🗣 " + heard;
+  if(correction){
+    const c = document.createElement("div"); c.className = "bfix"; c.textContent = "✏️ " + correction;
+    b.appendChild(c);
+  }
+  (Array.isArray(pron) ? pron : []).slice(0,3).forEach(p=>{
+    if(!p || !p.word) return;
+    const d = document.createElement("div"); d.className = "bpron";
+    const t = document.createElement("span");
+    t.textContent = "🔤 " + p.word + (p.said ? " (nghe như: " + p.said + ")" : "") + (p.tip ? " – " + p.tip : "");
+    const btn = document.createElement("button"); btn.className = "mini"; btn.textContent = "🔊";
+    btn.onclick = ()=>{
+      if("speechSynthesis" in window){ speechSynthesis.cancel(); speechSynthesis.speak(mkUtter(String(p.word),"en-US")); }
+    };
+    d.appendChild(t); d.appendChild(btn); b.appendChild(d);
+  });
+}
+function addAgent(r){
+  const mix = $("chatMix").value;
+  const d = document.createElement("div"); d.className = "bubble agent";
+  const main = document.createElement("div"); main.className = "btxt";
+  const sub = document.createElement("div"); sub.className = "bsub";
+  if(mix==="vi_mostly"){
+    main.textContent = "🦊 " + (r.reply_vi||"");
+    sub.textContent = "🇬🇧 " + (r.reply_en||""); sub.classList.add("strong");
+  }else{
+    main.textContent = "🦊 " + (r.reply_en||"");
+    sub.textContent = r.reply_vi || "";
+  }
+  d.appendChild(main); d.appendChild(sub);
+  const curScene = getScene();
+  if(curScene && parseInt(r.step,10) > 0){
+    const chip = document.createElement("div"); chip.className = "stepchip";
+    chip.textContent = "📍 Bước " + Math.min(parseInt(r.step,10), curScene.steps.length) + "/" + curScene.steps.length;
+    d.appendChild(chip);
+  }
+  const act = document.createElement("div"); act.className = "bact";
+  const b1 = document.createElement("button"); b1.className = "mini"; b1.textContent = "🔊 Nghe lại";
+  b1.onclick = ()=> speakChat(r);
+  act.appendChild(b1);
+  if(r.hint){
+    const h = document.createElement("button"); h.className = "mini hint";
+    h.textContent = "💡 Bé thử nói: " + r.hint;
+    h.onclick = ()=>{ if("speechSynthesis" in window){ speechSynthesis.cancel(); speechSynthesis.speak(mkUtter(r.hint,"en-US")); } };
+    act.appendChild(h);
+  }
+  d.appendChild(act);
+  const log = $("chatLog"); log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+
+/* --- đọc to bằng 2 giọng Anh / Việt --- */
+function mkUtter(text, lang){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = lang==="en-US" ? 0.85 : 0.95; u.pitch = 1.15;
+  const pref = lang==="en-US" ? /^en[-_]US/i : /^vi/i;
+  const v = speechSynthesis.getVoices().find(v=>pref.test(v.lang));
+  if(v) u.voice = v;
+  return u;
+}
+function speakChat(r){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const mix = $("chatMix").value, q = [];
+  if(mix==="both") q.push([r.reply_en,"en-US"],[r.reply_vi,"vi-VN"]);
+  else if(mix==="en_mostly") q.push([r.reply_en,"en-US"]);
+  else q.push([r.reply_vi,"vi-VN"],[r.reply_en,"en-US"]);
+  q.forEach(([t,l])=>{ if(t) speechSynthesis.speak(mkUtter(t,l)); });
+}
+
+/* --- gửi một lượt nói chuyện --- */
+async function chatSend(parts, opt){
+  opt = opt || {};
+  if(chatBusy) return;
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  chatBusy = true;
+  $("chatLoading").classList.add("show");
+  $("btnChatMic").disabled = true; $("chatSend").disabled = true;
+  let cb = null;
+  if(!opt.silent) cb = addBubble("child", opt.typed ? opt.typed : "🎤 …");
+  try{
+    const r = await chatCall(parts);
+    const heard = (opt.typed || r.heard || "").trim();
+    if(cb) updateChild(cb, heard || "(Mimi chưa nghe rõ)", (r.correction||"").trim(), opt.typed ? [] : r.pronunciation);
+    chatHistory.push({role:"user", text: opt.silent ? "(Hãy chào bé trước)" : (heard || "(không rõ)")});
+    chatHistory.push({role:"model", text: (r.reply_en||"") + " / " + (r.reply_vi||"")});
+    addAgent(r);
+    speakChat(r);
+  }catch(e){
+    console.error(e);
+    if(cb) cb.remove();
+    toast("Có lỗi: " + (e.message || e));
+  }finally{
+    chatBusy = false;
+    $("chatLoading").classList.remove("show");
+    $("btnChatMic").disabled = false; $("chatSend").disabled = false;
+  }
+}
+
+/* --- ghi âm lượt nói của bé --- */
+function chatMicUI(on){
+  const b = $("btnChatMic");
+  b.classList.toggle("rec", on);
+  b.textContent = on ? "⏹ Nói xong rồi" : "🎤 Bé nói chuyện";
+}
+async function chatMicToggle(){
+  if(chatBusy) return;
+  if(chatRecording){ chatStop(); return; }
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+  try{
+    chatStream = await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){
+    toast("Không mở được micro. Hãy cho phép quyền micro và mở web bằng https hoặc localhost.");
+    return;
+  }
+  chatChunks = [];
+  chatRecorder = new MediaRecorder(chatStream);
+  chatRecorder.ondataavailable = e=>{ if(e.data.size) chatChunks.push(e.data); };
+  chatRecorder.onstop = onChatRecStop;
+  chatRecorder.start();
+  chatRecording = true; chatMicUI(true);
+  chatTimer = setTimeout(()=>{ if(chatRecording) chatStop(); }, 15000);
+}
+function chatStop(){
+  chatRecording = false; clearTimeout(chatTimer); chatMicUI(false);
+  if(chatRecorder && chatRecorder.state!=="inactive") chatRecorder.stop();
+  if(chatStream) chatStream.getTracks().forEach(t=>t.stop());
+}
+async function onChatRecStop(){
+  const blob = new Blob(chatChunks, {type: chatRecorder.mimeType || "audio/webm"});
+  if(blob.size < 1500){ toast("Mimi chưa nghe thấy gì, bé thử lại nhé!"); return; }
+  try{
+    const wav = await blobToWav16k(blob);
+    await chatSend([
+      {text:"(Bé vừa nói trong file âm thanh này. Hãy nghe, ghi nguyên văn vào \"heard\", rồi trả lời bé.)"},
+      {inline_data:{mime_type:"audio/wav", data:bytesToBase64(wav)}}
+    ], {});
+  }catch(e){
+    console.error(e); toast("Có lỗi: " + (e.message || e));
+  }
+}
+
+function chatReset(){
+  chatHistory = [];
+  $("chatLog").innerHTML = "";
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+  chatEmpty();
+}
+function sendTyped(){
+  const v = $("chatText").value.trim();
+  if(!v) return;
+  $("chatText").value = "";
+  chatSend([{text:v}], {typed:v});
+}
+$("btnChatMic").onclick = chatMicToggle;
+$("chatSend").onclick = sendTyped;
+$("chatText").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); sendTyped(); } });
+$("chatStartBtn").onclick = ()=>{
+  if(chatBusy) return;
+  if(chatHistory.length) chatReset();
+  chatSend([{text:"(Hãy chào bé thật vui và hỏi một câu đơn giản để bắt đầu.)"}], {silent:true});
+};
+$("chatReset").onclick = chatReset;
+/* --- tình huống riêng do Gemini soạn --- */
+function getScene(){
+  const v = $("chatScene").value;
+  if(v.indexOf("custom:")===0) return scenes[parseInt(v.slice(7),10)] || null;
+  return null;
+}
+function renderSceneOptions(selected){
+  const sel = $("chatScene");
+  Array.from(sel.querySelectorAll("option[data-custom]")).forEach(o=>o.remove());
+  scenes.forEach((s,i)=>{
+    const o = document.createElement("option");
+    o.value = "custom:" + i; o.textContent = "✨ " + s.title; o.setAttribute("data-custom","1");
+    sel.appendChild(o);
+  });
+  if(selected) sel.value = selected;
+}
+function showScenePlan(){
+  const s = getScene(), box = $("scenePlan");
+  if(!s){ box.style.display = "none"; return; }
+  box.style.display = "";
+  $("scenePlanTitle").textContent = "📋 Giáo án: " + s.emoji + " " + s.title;
+  const body = $("scenePlanBody"); body.innerHTML = "";
+  const add = (label, text)=>{ const p = document.createElement("div"); p.textContent = label + text; body.appendChild(p); };
+  add("🎯 Mục tiêu: ", s.goal);
+  add("📝 Từ/câu: ", s.items.map(i=>i[1]+" ("+i[2]+")").join(", "));
+  s.steps.forEach((st,i)=> add((i+1) + ". ", st));
+  const del = document.createElement("button"); del.className = "mini"; del.textContent = "🗑 Xóa giáo án này";
+  del.onclick = ()=>{
+    const i = parseInt($("chatScene").value.slice(7),10);
+    scenes.splice(i,1); safeSet(SCENES_KEY, JSON.stringify(scenes));
+    renderSceneOptions("free");
+    if(topicId.indexOf("scene:")===0){ topicId = topics()[0].id; idx = 0; }
+    sceneChanged(); renderTopics(); render();
+  };
+  body.appendChild(del);
+}
+function sceneChanged(){ chatReset(); showScenePlan(); }
+$("chatScene").onchange = sceneChanged;
+
+async function generateScene(topic, age){
+  const prompt =
+`Bạn là chuyên gia dạy giao tiếp tiếng Anh cho trẻ em Việt Nam.
+Hãy soạn giáo án trò chuyện cho bé ${age} tuổi (độ khó phù hợp tuổi) về chủ đề: "${topic}".
+Người trò chuyện với bé là Mimi, một chú cáo thân thiện, là bạn của bé.
+Yêu cầu:
+- "title": tên giáo án bằng tiếng Việt, ngắn, vui. "emoji": một emoji hợp chủ đề.
+- "goal": mục tiêu bài học bằng tiếng Việt, một câu.
+- "scene": mô tả tình huống và vai của Mimi bằng tiếng Việt, 1-2 câu.
+- "items": đúng 8 từ/câu tiếng Anh quan trọng của chủ đề, từ dễ đến khó, hợp tuổi. Mỗi mục: {"emoji","en","vi"}.
+- "steps": 4-6 bước hội thoại. Mỗi bước là một chuỗi tiếng Việt ngắn nêu Mimi hỏi hoặc làm gì để bé nói ra một từ hoặc câu mục tiêu (ví dụ: "Hỏi bé thích con vật nào, bé trả lời: I like ...").
+- Nội dung an toàn cho trẻ em, không hỏi thông tin cá nhân (họ tên, địa chỉ, trường học, số điện thoại).
+- Nếu chủ đề không phù hợp với trẻ em, chỉ trả về {"error":"lý do ngắn bằng tiếng Việt"}.
+Chỉ trả về JSON đúng dạng:
+{"title":"...","emoji":"🏖️","goal":"...","scene":"...","items":[{"emoji":"🌊","en":"wave","vi":"con sóng"}],"steps":["..."]}`;
+  const d = await geminiJSON(prompt, 0.7);
+  if(d.error) throw new Error(String(d.error));
+  const items = (Array.isArray(d.items) ? d.items : [])
+    .filter(it=>it && it.en && it.vi)
+    .map(it=>[String(it.emoji||"⭐").trim(), String(it.en).trim(), String(it.vi).trim()]);
+  const steps = (Array.isArray(d.steps) ? d.steps : []).map(s=>String(s).trim()).filter(Boolean);
+  const title = String(d.title||"").trim();
+  if(!title || !items.length || !steps.length) throw new Error("AI chưa soạn được giáo án hợp lệ, hãy thử lại");
+  return {
+    title, emoji: String(d.emoji||"✨").trim(), goal: String(d.goal||"").trim(),
+    scene: String(d.scene||"").trim(), items, steps, topic, age
+  };
+}
+$("sceneCreate").onclick = async ()=>{
+  const topic = $("sceneInput").value.trim();
+  if(!topic){ toast("Gõ chủ đề trước nhé, ví dụ: đi biển"); return; }
+  if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
+  const age = parseInt($("chatAge").value,10) || 6;
+  const btn = $("sceneCreate"), st = $("sceneStatus");
+  btn.disabled = true;
+  st.textContent = "🤖 Gemini đang soạn giáo án, đợi một chút nhé...";
+  st.classList.add("show");
+  try{
+    const s = await generateScene(topic, age);
+    scenes.push(s);
+    if(scenes.length > 20) scenes.shift();
+    safeSet(SCENES_KEY, JSON.stringify(scenes));
+    renderSceneOptions("custom:" + (scenes.length-1));
+    $("sceneInput").value = "";
+    st.classList.remove("show");
+    sceneChanged(); renderTopics();
+    $("scenePlan").open = true;
+    toast("Đã soạn giáo án! Bấm ▶ Chào Mimi để bắt đầu.");
+  }catch(e){
+    console.error(e);
+    st.textContent = "Có lỗi: " + (e.message || e);
+  }finally{
+    btn.disabled = false;
+  }
+};
+$("sceneInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); $("sceneCreate").click(); } });
+
+renderSceneOptions();
+$("chatAge").value = plan ? plan.age : 6;
+chatEmpty();
+
+/* ---------- Khởi động ---------- */
+if("speechSynthesis" in window) speechSynthesis.getVoices();
+renderTopics(); render();
+</script>
+</body>
+</html>
