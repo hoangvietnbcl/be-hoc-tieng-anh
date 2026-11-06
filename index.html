@@ -107,6 +107,7 @@
   .lb-line{font-size:16px;margin-bottom:4px}
   .lb-label{color:var(--muted);font-size:14px;font-weight:600}
   .langbox .teach-en{font-weight:800;color:var(--primary-d);font-size:19px;margin-bottom:2px}
+  .lb-guide{background:#fff8e1;border-radius:10px;padding:6px 8px;margin:6px 0;font-size:16px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -719,11 +720,15 @@ Quy tắc:
 - Nếu bé nói tiếng Anh sai (từ, ngữ pháp), nhắc nhẹ nhàng bằng tiếng Việt trong "correction" kèm câu đúng. Chỉ sửa lỗi quan trọng nhất. Nếu bé nói đúng thì để rỗng.
 - Nghe kỹ PHÁT ÂM tiếng Anh của bé. Liệt kê tối đa 2 từ bé phát âm chưa chuẩn trong "pronunciation": "word" là từ đúng, "said" là bé đọc nghe giống như thế nào (viết bằng chữ Việt), "tip" là cách sửa một câu tiếng Việt thật đơn giản (kèm cách đọc bồi). Chỉ liệt kê khi thật sự nghe ra lỗi. Nếu lượt của bé là chữ gõ (không có âm thanh) hoặc bé đọc tốt thì để mảng rỗng.
 - Khi bé phát âm sai một từ, trong lời đáp hãy đọc mẫu từ đó rồi mời bé nói lại, trước khi sang nội dung mới.
-- Mỗi lượt, chọn tối đa 3 từ hoặc cụm từ tiếng Anh quan trọng trong "reply_en" để dạy bé trong "vocab". Mỗi mục có dạng {"en","vi","ipa","say","tip"}: "en" phải xuất hiện nguyên văn trong "reply_en"; "vi" là nghĩa tiếng Việt, nên xuất hiện nguyên văn trong "reply_vi"; "ipa" là phiên âm IPA đặt giữa hai dấu /; "say" là cách đọc bồi bằng chữ Việt (ví dụ: "két"); "tip" là mẹo một câu tiếng Việt về âm khó nhất của từ đó (có thể để rỗng). Ưu tiên từ mới hoặc từ bé hay đọc sai.
+- Mỗi lượt, chọn tối đa 4 từ hoặc cụm từ tiếng Anh quan trọng trong "reply_en" (nếu "reply_en" là câu hỏi thì chọn đúng những từ bé cần chú ý để hiểu câu hỏi) để dạy bé trong "vocab". Mỗi mục có dạng {"en","vi","ipa","say","tip"}: "en" phải xuất hiện nguyên văn trong "reply_en"; "vi" là nghĩa tiếng Việt, nên xuất hiện nguyên văn trong "reply_vi"; "ipa" là phiên âm IPA đặt giữa hai dấu /; "say" là cách đọc bồi bằng chữ Việt (ví dụ: "két"); "tip" là mẹo một câu tiếng Việt về âm khó nhất của từ đó (có thể để rỗng). Ưu tiên từ mới hoặc từ bé hay đọc sai.
+- Khi "reply_en" là một câu hỏi dành cho bé, hãy hướng dẫn bé như một cô giáo, tất cả sẽ được đọc thành tiếng nên viết như lời nói:
+  + "explain_q_vi": 2-4 câu tiếng Việt ngắn chỉ ra những từ bé cần chú ý trong câu hỏi (đúng các từ trong "vocab"), nói nghĩa tiếng Việt và cách đọc bồi của từng từ. Viết từ tiếng Anh nguyên dạng ngay trong câu tiếng Việt. Ví dụ với câu hỏi "How many members are in your family?": "Con chú ý hai từ này nhé. Từ members nghĩa là các thành viên, đọc là mem-bờ. Từ family nghĩa là gia đình, đọc là phem-mơ-li."
+  + "answer": gợi ý một câu trả lời mẫu thật đơn giản, đúng ý câu hỏi và hợp trình độ của bé, dạng {"en","vi","explain_vi","map"}. "en" là câu trả lời mẫu bằng tiếng Anh; "vi" là nghĩa tiếng Việt của câu đó; "explain_vi" là 2-4 câu tiếng Việt ngắn giải thích câu trả lời mẫu: nghĩa của từng phần hoặc từ quan trọng (viết từ tiếng Anh nguyên dạng), rồi mời bé nói thử; "map" là các cặp từ trong câu trả lời mẫu (tối đa 4), mỗi cặp {"vi","en","ipa","say","tip"}, trong đó "en" phải xuất hiện nguyên văn trong "answer.en" và "vi" phải xuất hiện nguyên văn trong "answer.vi".
+  + Nếu lượt này bạn không hỏi bé câu hỏi nào (ví dụ chỉ khen hoặc tổng kết) thì "explain_q_vi" để rỗng và "answer" là null. Trường "hint" luôn là câu trả lời mẫu ngắn bằng tiếng Anh (giống "answer.en").
 - Luôn khen và khích lệ. Không hỏi thông tin cá nhân (họ tên, địa chỉ, trường học, số điện thoại). Nội dung phải an toàn cho trẻ em; nếu bé nói điều không phù hợp thì chuyển chủ đề nhẹ nhàng.
 - Nếu không nghe rõ âm thanh, để "heard" rỗng và nhờ bé nói lại.
 Chỉ trả về JSON đúng dạng:
-{"heard":"nguyên văn điều bé vừa nói, đúng ngôn ngữ bé nói","correction":"","pronunciation":[{"word":"","said":"","tip":""}],"reply_en":"","reply_vi":"","hint":"một câu tiếng Anh ngắn bé có thể nói tiếp","step":0,"vocab":[{"en":"","vi":"","ipa":"","say":"","tip":""}],"teach":null hoặc {"vi":"","en":"","explain_vi":"","map":[{"vi":"","en":"","ipa":"","say":"","tip":""}]}}`;
+{"heard":"nguyên văn điều bé vừa nói, đúng ngôn ngữ bé nói","correction":"","pronunciation":[{"word":"","said":"","tip":""}],"reply_en":"","reply_vi":"","hint":"một câu tiếng Anh ngắn bé có thể nói tiếp","step":0,"vocab":[{"en":"","vi":"","ipa":"","say":"","tip":""}],"explain_q_vi":"","answer":null hoặc {"en":"","vi":"","explain_vi":"","map":[{"vi":"","en":"","ipa":"","say":"","tip":""}]},"teach":null hoặc {"vi":"","en":"","explain_vi":"","map":[{"vi":"","en":"","ipa":"","say":"","tip":""}]}}`;
 }
 
 async function chatCall(userParts){
@@ -869,7 +874,10 @@ function addAgent(r){
   const d = document.createElement("div"); d.className = "bubble agent";
   const hasTeach = !!(r.teach && r.teach.en);
   const tmap = hasTeach ? (Array.isArray(r.teach.map) ? r.teach.map : []).filter(m=>m && m.en).slice(0,5) : [];
-  const vocab = (Array.isArray(r.vocab) ? r.vocab : []).filter(v=>v && v.en).slice(0,3);
+  const vocab = (Array.isArray(r.vocab) ? r.vocab : []).filter(v=>v && v.en).slice(0,4);
+  const ans = (r.answer && r.answer.en) ? r.answer : null;
+  const amap = ans ? (Array.isArray(ans.map) ? ans.map : []).filter(m=>m && m.en).slice(0,4) : [];
+  const pad = vocab.map(()=>({w:""}));   /* để từ trong câu trả lời có màu khác với từ trong câu hỏi */
 
   const line = (cls, prefix, text, marks)=>{
     const el = document.createElement("div"); el.className = cls;
@@ -887,23 +895,29 @@ function addAgent(r){
   };
 
   /* Ô tiếng Việt: chỉ chứa tiếng Việt, đọc bằng giọng Việt */
-  const viSegs = [];
-  if(hasTeach && r.teach.explain_vi) viSegs.push([r.teach.explain_vi,"vi"]);
-  if(r.reply_vi) viSegs.push([r.reply_vi,"vi"]);
+  const allSegs = chatSegments(r);
+  const viSegs = allSegs.filter(s=>s[1]==="vi");
   const vb = langBox("vi", "🇻🇳 Tiếng Việt", listen(viSegs));
   if(hasTeach && r.teach.vi) vb.body.appendChild(line("lb-line", "🗣 Con nói: ", r.teach.vi, tmap.map(m=>({w:m.vi || ""}))));
   if(hasTeach && r.teach.explain_vi) vb.body.appendChild(line("lb-sub", "", r.teach.explain_vi));
   if(r.reply_vi) vb.body.appendChild(line("lb-main", "🦊 ", r.reply_vi, vocab.map(v=>({w:v.vi || ""}))));
+  if(r.explain_q_vi) vb.body.appendChild(line("lb-guide", "📌 Từ cần chú ý: ", r.explain_q_vi, vocab.map(v=>({w:v.en}))));
+  if(ans){
+    if(ans.vi) vb.body.appendChild(line("lb-line", "💬 Gợi ý trả lời: ", ans.vi, pad.concat(amap.map(m=>({w:m.vi || ""})))));
+    if(ans.explain_vi) vb.body.appendChild(line("lb-guide", "📖 Giải thích: ", ans.explain_vi, pad.concat(amap.map(m=>({w:m.en})))));
+  }
 
   /* Ô tiếng Anh: câu tiếng Anh, từ vựng, phiên âm và cách đọc riêng từng từ */
-  const enSegs = [];
-  if(hasTeach) enSegs.push([r.teach.en,"en"]);
-  if(r.reply_en) enSegs.push([r.reply_en,"en"]);
+  const enSegs = allSegs.filter(s=>s[1]==="en");
   const eb = langBox("en", "🇬🇧 English", listen(enSegs));
   if(hasTeach) eb.body.appendChild(line("teach-en", "Nói thế này nhé: ", r.teach.en, tmap.map(m=>({w:m.en}))));
   if(r.reply_en) eb.body.appendChild(line("lb-main", "🦊 ", r.reply_en, vocab.map(v=>({w:v.en}))));
   tmap.forEach((m,i)=> eb.body.appendChild(wordRow(m, i)));
   vocab.forEach((v,i)=> eb.body.appendChild(wordRow(v, i)));
+  if(ans){
+    eb.body.appendChild(line("teach-en", "💬 Gợi ý trả lời: ", ans.en, pad.concat(amap.map(m=>({w:m.en})))));
+    amap.forEach((m,i)=> eb.body.appendChild(wordRow(m, i + vocab.length)));
+  }
 
   const wrap = document.createElement("div"); wrap.className = "langboxes";
   if(mix==="vi_mostly"){ wrap.appendChild(vb.box); wrap.appendChild(eb.box); }
@@ -920,10 +934,14 @@ function addAgent(r){
   const b1 = document.createElement("button"); b1.className = "mini"; b1.textContent = "🔊 Nghe cả hai";
   b1.onclick = ()=> speakChat(r);
   act.appendChild(b1);
-  if(r.hint){
+  const bstop = document.createElement("button"); bstop.className = "mini"; bstop.textContent = "⏹ Dừng";
+  bstop.onclick = ()=> stopAllSpeech();
+  act.appendChild(bstop);
+  const hintText = (ans && ans.en) || r.hint;
+  if(hintText){
     const h = document.createElement("button"); h.className = "mini hint";
-    h.textContent = "💡 Bé thử nói: " + r.hint;
-    h.onclick = ()=>{ stopAllSpeech(); speakWord(r.hint); };
+    h.textContent = "💡 Bé thử nói: " + hintText;
+    h.onclick = ()=>{ stopAllSpeech(); speakWord(hintText); };
     act.appendChild(h);
   }
   d.appendChild(act);
@@ -967,20 +985,21 @@ function unlockAudio(){
     const p = ttsEl.play(); if(p && p.catch) p.catch(()=>{});
   }catch(e){}
 }
-async function geminiTTS(text, lang){
-  const ck = lang + "|" + text;
+async function geminiTTS(text, lang, mixed){
+  const ck = lang + "|" + (mixed ? "m|" : "") + text;
   if(ttsCache.has(ck)) return ttsCache.get(ck);
   const key = safeGet(API_KEY,"");
   const model = safeGet(TTSMODEL_KEY,"") || "gemini-3.1-flash-tts-preview";
   const voice = safeGet(VOICE_KEY,"") || "Kore";
   const style = lang==="vi"
-    ? "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in Vietnamese: "
+    ? "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in Vietnamese" + (mixed ? ", pronouncing any English words clearly with an American English accent" : "") + ": "
     : "Say slowly, clearly and warmly, like a cheerful teacher talking to a young child, in American English: ";
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
   /* Khóa sẵn ngôn ngữ (vi-VN / en-US) để đọc đúng giọng; nếu API không nhận thì thử lại không khóa */
   const post = async (withLang)=>{
     const sc = {voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}};
-    if(withLang) sc.languageCode = lang==="vi" ? "vi-VN" : "en-US";
+    /* Đoạn tiếng Việt có xen từ tiếng Anh thì không khóa ngôn ngữ để từ tiếng Anh đọc đúng */
+    if(withLang && !(lang==="vi" && mixed)) sc.languageCode = lang==="vi" ? "vi-VN" : "en-US";
     const rs = await fetch(url,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -1041,10 +1060,14 @@ async function speakSegments(segs, token){
   const mode = safeGet(TTS_KEY,"") || "gemini";
   if(mode==="browser" || !safeGet(API_KEY,"")){ speakBrowser(segs); return; }
   try{
-    const urls = await Promise.all(segs.map(([t,l])=>geminiTTS(t,l)));
-    for(const u of urls){
+    /* Gọi các đoạn song song, đoạn nào xong theo thứ tự thì phát ngay để bé không phải chờ lâu */
+    const ps = segs.map(([t,l,m])=>geminiTTS(t,l,m));
+    ps.forEach(p=>p.catch(()=>{}));
+    for(const p of ps){
+      const u = await p;
       if(token !== chatPlayToken) return;
       await playUrl(u);
+      if(token !== chatPlayToken) return;
     }
   }catch(e){
     console.error(e);
@@ -1054,6 +1077,26 @@ async function speakSegments(segs, token){
     }
   }
 }
+/* Các từ tiếng Anh xuất hiện trong bài dạy, để biết đoạn tiếng Việt nào có xen từ tiếng Anh */
+function enWordsOf(r){
+  const set = new Set();
+  const add = w => String(w || "").toLowerCase().split(/[^a-z']+/).forEach(x=>{ if(x.length >= 2) set.add(x); });
+  (Array.isArray(r.vocab) ? r.vocab : []).forEach(v=>{ if(v) add(v.en); });
+  ((r.teach && Array.isArray(r.teach.map)) ? r.teach.map : []).forEach(m=>{ if(m) add(m.en); });
+  ((r.answer && Array.isArray(r.answer.map)) ? r.answer.map : []).forEach(m=>{ if(m) add(m.en); });
+  return set;
+}
+/* Gộp các đoạn liền nhau cùng ngôn ngữ để giảm số lần gọi giọng đọc */
+function mergeSegs(segs){
+  const out = [];
+  segs.forEach(([t,l])=>{
+    const last = out[out.length-1];
+    if(last && last[1]===l) last[0] += " " + t;
+    else out.push([t,l]);
+  });
+  return out;
+}
+/* Thứ tự đọc: bài dạy (nếu bé nói tiếng Việt) → câu của Mimi → giải thích từ cần chú ý → gợi ý trả lời → giải thích câu trả lời */
 function chatSegments(r){
   const mix = $("chatMix").value, segs = [];
   if(r.teach && r.teach.en){
@@ -1063,7 +1106,18 @@ function chatSegments(r){
   if(mix==="both") segs.push([r.reply_en,"en"],[r.reply_vi,"vi"]);
   else if(mix==="en_mostly") segs.push([r.reply_en,"en"]);
   else segs.push([r.reply_vi,"vi"],[r.reply_en,"en"]);
-  return segs.filter(s=>s[0]);
+  if(r.explain_q_vi) segs.push([r.explain_q_vi,"vi"]);
+  if(r.answer && r.answer.en){
+    segs.push(["Con có thể trả lời như thế này nhé.","vi"]);
+    segs.push([r.answer.en,"en"]);
+    if(r.answer.explain_vi) segs.push([r.answer.explain_vi,"vi"]);
+  }
+  const merged = mergeSegs(segs.filter(s=>s[0]));
+  const ew = enWordsOf(r);
+  merged.forEach(s=>{
+    if(s[1]==="vi") s[2] = s[0].toLowerCase().split(/[^\p{L}']+/u).some(t=>ew.has(t));
+  });
+  return merged;
 }
 async function speakChat(r){
   stopAllSpeech();
@@ -1088,7 +1142,8 @@ async function chatSend(parts, opt){
     if(cb) updateChild(cb, heard || "(Mimi chưa nghe rõ)", (r.correction||"").trim(), opt.typed ? [] : r.pronunciation, r.teach);
     chatHistory.push({role:"user", text: opt.silent ? "(Hãy chào bé trước)" : (heard || "(không rõ)")});
     chatHistory.push({role:"model", text: (r.reply_en||"") + " / " + (r.reply_vi||"") +
-      (r.teach && r.teach.en ? " [Mimi vừa dạy bé nói: " + r.teach.en + "]" : "")});
+      (r.teach && r.teach.en ? " [Mimi vừa dạy bé nói: " + r.teach.en + "]" : "") +
+      (r.answer && r.answer.en ? " [Mimi vừa gợi ý bé trả lời: " + r.answer.en + "]" : "")});
     addAgent(r);
     speakChat(r);
   }catch(e){
