@@ -108,12 +108,21 @@
   .lb-label{color:var(--muted);font-size:14px;font-weight:600}
   .langbox .teach-en{font-weight:800;color:var(--primary-d);font-size:19px;margin-bottom:2px}
   .lb-guide{background:#fff8e1;border-radius:10px;padding:6px 8px;margin:6px 0;font-size:16px;line-height:1.5}
+  header > div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  #childBtn{padding:8px 14px;font-size:15px}
+  .chlist{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto;margin-bottom:8px}
+  .chrow{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fffdf6;border:2px solid #f3e6c4;border-radius:14px;padding:8px 10px;text-align:left}
+  .chrow.on{border-color:var(--green);background:#f0fbf4}
+  .chrow .meta{font-size:13px;color:var(--muted);margin-top:2px}
+  .chrow .btns{display:flex;gap:6px;flex-shrink:0}
+  .mini.primary{background:var(--primary);color:#fff}
 </style>
 </head>
 <body>
 <header>
   <h1>🌈 Bé học tiếng Anh</h1>
   <div>
+    <button class="ghost" id="childBtn" title="Chọn bé">🧒 Chọn bé ▾</button>
     <span class="total" id="totalStars">⭐ 0</span>
     <button class="ghost" id="btnSettings" title="Cài đặt">⚙️</button>
   </div>
@@ -123,6 +132,7 @@
   <div id="learnView">
   <div class="planbar">
     <button class="primary" id="btnPlan">🧒 Tạo giáo trình theo tuổi của bé</button>
+    <button class="ghost" id="btnPlans">📚 Các buổi đã lưu</button>
     <div class="small" id="planInfo"></div>
   </div>
   <div class="topics" id="topics"></div>
@@ -247,7 +257,7 @@
 </dialog>
 
 <dialog id="dlgPlan">
-  <h2>🧒 Giáo trình cho bé</h2>
+  <h2 id="planDlgTitle">🧒 Giáo trình cho bé</h2>
   <label for="planAge">Bé mấy tuổi?</label>
   <input id="planAge" type="number" min="2" max="14" placeholder="Ví dụ: 6">
   <label for="planLevel">Trình độ hiện tại</label>
@@ -269,6 +279,30 @@
   <div class="dlg-actions">
     <button class="ghost" id="planCancel">Đóng</button>
     <button class="primary" id="planCreate">✨ Tạo giáo trình</button>
+  </div>
+</dialog>
+
+<dialog id="dlgChildren">
+  <h2>🧒 Chọn bé</h2>
+  <div id="childList" class="chlist"></div>
+  <label for="childName" id="childFormTitle">Thêm bé mới</label>
+  <input id="childName" placeholder="Tên hoặc biệt danh của bé" maxlength="20">
+  <label for="childAge">Tuổi</label>
+  <input id="childAge" type="number" min="2" max="14" placeholder="Ví dụ: 6">
+  <p class="small">Mỗi bé có giáo trình, tiến độ, sao, từ riêng và giáo án trò chuyện riêng. Tên (nên dùng biệt danh) được gửi kèm cho Gemini để Mimi gọi tên bé. Dữ liệu bản cũ sẽ chuyển cho bé đầu tiên.</p>
+  <div class="dlg-actions">
+    <button class="ghost" id="childCancelEdit" style="display:none">Hủy sửa</button>
+    <button class="ghost" id="childClose">Đóng</button>
+    <button class="primary" id="childSave">➕ Thêm bé</button>
+  </div>
+</dialog>
+
+<dialog id="dlgPlans">
+  <h2 id="plansTitle">📚 Các buổi đã lưu</h2>
+  <div id="plansList" class="chlist"></div>
+  <p class="small">Mỗi lần tạo giáo trình mới, giáo trình cũ của bé được lưu lại cùng tiến độ để mở lại sau.</p>
+  <div class="dlg-actions">
+    <button class="ghost" id="plansClose">Đóng</button>
   </div>
 </dialog>
 
@@ -316,8 +350,12 @@ const STARS_KEY  = "kidsEnglish.stars";
 const API_KEY    = "kidsEnglish.apiKey";
 const MODEL_KEY  = "kidsEnglish.model";
 
-const safeGet = (k,d)=>{ try{ const v=localStorage.getItem(k); return v===null?d:v }catch(e){ return d } };
-const safeSet = (k,v)=>{ try{ localStorage.setItem(k,v) }catch(e){} };
+/* Dữ liệu riêng của từng bé được lưu kèm id của bé; cài đặt chung (API key, giọng đọc) thì dùng chung */
+let activeChildId = "";
+const CHILD_KEY_NAMES = ["kidsEnglish.custom","kidsEnglish.stars","kidsEnglish.plan","kidsEnglish.progress","kidsEnglish.scenes","kidsEnglish.plans"];
+const scoped = k => (activeChildId && CHILD_KEY_NAMES.indexOf(k) >= 0) ? k + "." + activeChildId : k;
+const safeGet = (k,d)=>{ try{ const v=localStorage.getItem(scoped(k)); return v===null?d:v }catch(e){ return d } };
+const safeSet = (k,v)=>{ try{ localStorage.setItem(scoped(k),v) }catch(e){} };
 
 const PLAN_KEY = "kidsEnglish.plan";
 const PROG_KEY = "kidsEnglish.progress";
@@ -325,19 +363,31 @@ const SCENES_KEY = "kidsEnglish.scenes";
 const TTS_KEY = "kidsEnglish.ttsMode";
 const TTSMODEL_KEY = "kidsEnglish.ttsModel";
 const VOICE_KEY = "kidsEnglish.ttsVoice";
-let scenes = [];
-try{ scenes = JSON.parse(safeGet(SCENES_KEY,"[]")) || []; }catch(e){ scenes = []; }
-if(!Array.isArray(scenes)) scenes = [];
+const PLANS_KEY = "kidsEnglish.plans";          /* các buổi (giáo trình) đã lưu của từng bé */
+const CHILDREN_KEY = "kidsEnglish.children";    /* danh sách bé */
+const ACTIVE_KEY = "kidsEnglish.activeChild";   /* bé đang chọn */
 
-let custom = JSON.parse(safeGet(CUSTOM_KEY,"[]"));
-let totalStars = parseInt(safeGet(STARS_KEY,"0"),10) || 0;
-let plan = null;
-try{ plan = JSON.parse(safeGet(PLAN_KEY,"null")); }catch(e){ plan = null; }
-if(!plan || !Array.isArray(plan.lessons) || !plan.lessons.length) plan = null;
-let progress = {};
-try{ progress = JSON.parse(safeGet(PROG_KEY,"{}")) || {}; }catch(e){ progress = {}; }
-let topicId = plan ? "plan:0" : "base:" + Object.keys(BASE_TOPICS)[0];
+let scenes = [], custom = [], totalStars = 0, plan = null, progress = {}, plans = [];
+let topicId = "base:" + Object.keys(BASE_TOPICS)[0];
 let idx = 0;
+
+function jparse(s, d){
+  try{ const v = JSON.parse(s); return (v === null || v === undefined) ? d : v; }catch(e){ return d; }
+}
+/* Đọc lại toàn bộ dữ liệu của bé đang chọn */
+function loadChildState(){
+  custom = jparse(safeGet(CUSTOM_KEY,"[]"), []); if(!Array.isArray(custom)) custom = [];
+  totalStars = parseInt(safeGet(STARS_KEY,"0"),10) || 0;
+  plan = jparse(safeGet(PLAN_KEY,"null"), null);
+  if(!plan || !Array.isArray(plan.lessons) || !plan.lessons.length) plan = null;
+  progress = jparse(safeGet(PROG_KEY,"{}"), {});
+  if(typeof progress !== "object" || Array.isArray(progress)) progress = {};
+  scenes = jparse(safeGet(SCENES_KEY,"[]"), []); if(!Array.isArray(scenes)) scenes = [];
+  plans = jparse(safeGet(PLANS_KEY,"[]"), []); if(!Array.isArray(plans)) plans = [];
+  topicId = plan ? "plan:0" : "base:" + Object.keys(BASE_TOPICS)[0];
+  idx = 0;
+}
+loadChildState();
 let quiz = false;
 let revealed = false;
 
@@ -375,7 +425,7 @@ function render(){
   if(!currentTopic()) topicId = topics()[0].id;
   const ct = currentTopic();
   $("planInfo").textContent = plan
-    ? "Giáo trình cho bé " + plan.age + " tuổi" + (ct && ct.goal ? " – Mục tiêu: " + ct.goal : "")
+    ? "Giáo trình của " + (currentChild() ? currentChild().name : "bé") + " (" + plan.age + " tuổi)" + (ct && ct.goal ? " – Mục tiêu: " + ct.goal : "")
     : "Nhập tuổi của bé để Gemini soạn giáo trình riêng.";
   const list = currentList();
   if(!list.length){ idx=0; return; }
@@ -648,7 +698,10 @@ Chỉ trả về JSON đúng dạng:
 
 $("btnPlan").onclick = ()=>{
   if(!safeGet(API_KEY,"")){ openSettings(); toast("Bố mẹ nhập Gemini API key trước nhé"); return; }
-  if(plan){ $("planAge").value = plan.age; $("planInterests").value = plan.interests || ""; }
+  const cc = currentChild();
+  $("planDlgTitle").textContent = "🧒 Giáo trình cho " + (cc ? cc.name : "bé");
+  $("planAge").value = (cc && cc.age) || (plan && plan.age) || "";
+  $("planInterests").value = (plan && plan.interests) || "";
   $("planStatus").classList.remove("show");
   $("dlgPlan").showModal();
 };
@@ -662,6 +715,8 @@ $("planCreate").onclick = async ()=>{
   st.classList.add("show");
   try{
     const p = await generatePlan(age, $("planInterests").value.trim(), $("planLevel").value, parseInt($("planCount").value,10));
+    archivePlan();   /* lưu giáo trình cũ của bé (kèm tiến độ) trước khi thay bằng giáo trình mới */
+    p.id = newId(); p.createdAt = new Date().toISOString();
     plan = p; safeSet(PLAN_KEY, JSON.stringify(plan));
     progress = {}; safeSet(PROG_KEY, "{}");
     topicId = "plan:0"; idx = 0;
@@ -710,7 +765,7 @@ function chatSystem(){
     const words = currentList().slice(0,10).map(i=>i[1]+" ("+i[2]+")").join(", ");
     scene += ". Các từ/câu của bài: " + words;
   }
-  return `Bạn là Mimi, một chú cáo thân thiện, là bạn học tiếng Anh của một bé ${age} tuổi người Việt. Bạn đang trò chuyện bằng giọng nói với bé.
+  return `Bạn là Mimi, một chú cáo thân thiện, là bạn học tiếng Anh của một bé ${age} tuổi người Việt${childNote()}. Bạn đang trò chuyện bằng giọng nói với bé.
 Tình huống: ${scene}.
 Cách nói: ${MIX_DESC[mix]}
 Quy tắc:
@@ -1324,9 +1379,237 @@ renderSceneOptions();
 $("chatAge").value = plan ? plan.age : 6;
 chatEmpty();
 
+/* ---------- Nhiều bé: hồ sơ, dữ liệu riêng từng bé, các buổi đã lưu ---------- */
+let children = [];
+let editingChildId = "";
+
+function newId(){ return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function loadChildren(){
+  children = jparse(safeGet(CHILDREN_KEY,"[]"), []);
+  if(!Array.isArray(children)) children = [];
+  children = children.filter(c=>c && c.id && c.name);
+}
+function saveChildren(){ safeSet(CHILDREN_KEY, JSON.stringify(children)); }
+function currentChild(){ return children.find(c=>c.id===activeChildId) || null; }
+function childNote(){
+  const c = currentChild();
+  return c ? ", tên là " + c.name + " (thỉnh thoảng hãy gọi tên bé cho thân mật)" : "";
+}
+function childStore(k, id){ return k + "." + id; }
+function readChildRaw(k, id){ try{ return localStorage.getItem(childStore(k,id)); }catch(e){ return null; } }
+/* Chuyển dữ liệu của bản cũ (chưa có hồ sơ bé) sang cho bé đầu tiên */
+function migrateLegacyTo(id){
+  CHILD_KEY_NAMES.forEach(k=>{
+    try{
+      const v = localStorage.getItem(k);
+      if(v !== null){
+        if(localStorage.getItem(childStore(k,id)) === null) localStorage.setItem(childStore(k,id), v);
+        localStorage.removeItem(k);
+      }
+    }catch(e){}
+  });
+}
+function countSessions(id){
+  if(id === activeChildId) return plans.length + (plan ? 1 : 0);
+  const h = jparse(readChildRaw(PLANS_KEY,id), []);
+  const a = jparse(readChildRaw(PLAN_KEY,id), null);
+  return (Array.isArray(h) ? h.length : 0) + ((a && Array.isArray(a.lessons) && a.lessons.length) ? 1 : 0);
+}
+function childStars(id){
+  return id === activeChildId ? totalStars : (parseInt(readChildRaw(STARS_KEY,id) || "0",10) || 0);
+}
+function mkBtn(label, cls, fn){
+  const b = document.createElement("button"); b.className = cls; b.textContent = label; b.onclick = fn; return b;
+}
+
+/* Áp dụng bé đang chọn: nạp lại dữ liệu và làm mới giao diện */
+function applyChild(){
+  loadChildState();
+  const c = currentChild();
+  $("childBtn").textContent = "🧒 " + (c ? c.name : "Chọn bé") + " ▾";
+  $("chatAge").value = (c && c.age) ? c.age : (plan ? plan.age : 6);
+  renderSceneOptions("free");
+  showScenePlan();
+  chatReset();
+  renderTopics(); render();
+}
+function switchChild(id){
+  activeChildId = id;
+  safeSet(ACTIVE_KEY, id);
+  applyChild();
+}
+function ensureChild(){
+  if(children.length) return;
+  const c = {id:newId(), name:"Bé", age:6, createdAt:new Date().toISOString()};
+  children.push(c); saveChildren(); migrateLegacyTo(c.id); switchChild(c.id);
+}
+
+function resetChildForm(){
+  editingChildId = "";
+  $("childName").value = ""; $("childAge").value = "";
+  $("childFormTitle").textContent = "Thêm bé mới";
+  $("childSave").textContent = "➕ Thêm bé";
+  $("childCancelEdit").style.display = "none";
+}
+function renderChildList(){
+  const box = $("childList"); box.innerHTML = "";
+  if(!children.length){
+    const p = document.createElement("div"); p.className = "small";
+    p.textContent = "Chưa có bé nào. Hãy thêm bé đầu tiên ở bên dưới.";
+    box.appendChild(p); return;
+  }
+  children.forEach(c=>{
+    const row = document.createElement("div"); row.className = "chrow" + (c.id===activeChildId ? " on" : "");
+    const info = document.createElement("div");
+    const nm = document.createElement("div"); nm.style.fontWeight = "800";
+    nm.textContent = c.name + " · " + c.age + " tuổi" + (c.id===activeChildId ? "  ✓" : "");
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.textContent = "⭐ " + childStars(c.id) + " · " + countSessions(c.id) + " giáo trình đã lưu";
+    info.appendChild(nm); info.appendChild(meta);
+    const btns = document.createElement("div"); btns.className = "btns";
+    if(c.id !== activeChildId){
+      btns.appendChild(mkBtn("Chọn", "mini primary", ()=>{ switchChild(c.id); renderChildList(); $("dlgChildren").close(); }));
+    }
+    btns.appendChild(mkBtn("✏️", "mini", ()=>{
+      editingChildId = c.id;
+      $("childName").value = c.name; $("childAge").value = c.age;
+      $("childFormTitle").textContent = "Sửa thông tin bé";
+      $("childSave").textContent = "💾 Lưu";
+      $("childCancelEdit").style.display = "";
+    }));
+    btns.appendChild(mkBtn("🗑", "mini", ()=> deleteChild(c)));
+    row.appendChild(info); row.appendChild(btns);
+    box.appendChild(row);
+  });
+}
+function deleteChild(c){
+  if(!confirm("Xóa bé " + c.name + " cùng toàn bộ giáo trình, tiến độ, sao và giáo án của bé?")) return;
+  CHILD_KEY_NAMES.forEach(k=>{ try{ localStorage.removeItem(childStore(k,c.id)); }catch(e){} });
+  children = children.filter(x=>x.id !== c.id);
+  saveChildren();
+  if(c.id === activeChildId){
+    activeChildId = children[0] ? children[0].id : "";
+    safeSet(ACTIVE_KEY, activeChildId);
+    applyChild();
+  }
+  resetChildForm();
+  renderChildList();
+}
+function openChildren(){
+  resetChildForm(); renderChildList();
+  $("dlgChildren").showModal();
+}
+$("childBtn").onclick = openChildren;
+$("childClose").onclick = ()=> $("dlgChildren").close();
+$("dlgChildren").addEventListener("close", ensureChild);   /* luôn có ít nhất một bé để lưu dữ liệu */
+$("childCancelEdit").onclick = ()=> resetChildForm();
+$("childSave").onclick = ()=>{
+  const name = $("childName").value.trim().slice(0,20);
+  const age = parseInt($("childAge").value,10);
+  if(!name){ toast("Nhập tên của bé nhé"); return; }
+  if(!(age>=2 && age<=14)){ toast("Nhập tuổi của bé từ 2 đến 14 nhé"); return; }
+  if(editingChildId){
+    const c = children.find(x=>x.id===editingChildId);
+    if(c){ c.name = name; c.age = age; }
+    saveChildren();
+    const wasActive = (editingChildId === activeChildId);
+    resetChildForm(); renderChildList();
+    if(wasActive){ applyChild(); }
+    return;
+  }
+  const first = children.length === 0;
+  const c = {id:newId(), name, age, createdAt:new Date().toISOString()};
+  children.push(c); saveChildren();
+  if(first) migrateLegacyTo(c.id);
+  resetChildForm();
+  switchChild(c.id);
+  renderChildList();
+  toast("Đã thêm bé " + name);
+  if(first) $("dlgChildren").close();
+};
+
+/* --- các buổi (giáo trình) đã lưu của từng bé --- */
+function fmtDate(iso){
+  if(!iso) return "(không rõ ngày)";
+  try{ return new Date(iso).toLocaleString("vi-VN", {dateStyle:"short", timeStyle:"short"}); }catch(e){ return String(iso); }
+}
+function archivePlan(){
+  if(!plan) return;
+  const snap = Object.assign({}, plan, {progress: Object.assign({}, progress), archivedAt: new Date().toISOString()});
+  if(!snap.id) snap.id = newId();
+  plans = plans.filter(x=>x.id !== snap.id);
+  plans.unshift(snap);
+  if(plans.length > 30) plans.length = 30;
+  safeSet(PLANS_KEY, JSON.stringify(plans));
+}
+function planStats(p, prog){
+  let total = 0, done = 0;
+  (p.lessons || []).forEach(l=> (l.items || []).forEach(it=>{ total++; if((prog && prog[it[1]] || 0) >= 4) done++; }));
+  return {total, done};
+}
+function openSavedPlan(id){
+  const s = plans.find(x=>x.id === id);
+  if(!s) return;
+  archivePlan();                                  /* giữ lại giáo trình đang dùng */
+  plans = plans.filter(x=>x.id !== id);
+  plan = {age:s.age, interests:s.interests, summary:s.summary, lessons:s.lessons, id:s.id, createdAt:s.createdAt};
+  progress = s.progress || {};
+  safeSet(PLAN_KEY, JSON.stringify(plan));
+  safeSet(PROG_KEY, JSON.stringify(progress));
+  safeSet(PLANS_KEY, JSON.stringify(plans));
+  topicId = "plan:0"; idx = 0;
+  renderTopics(); render();
+  $("dlgPlans").close();
+  toast("Đã mở lại giáo trình đã lưu");
+}
+function renderPlansList(){
+  const c = currentChild();
+  $("plansTitle").textContent = "📚 Các buổi đã lưu" + (c ? " – " + c.name : "");
+  const box = $("plansList"); box.innerHTML = "";
+  const items = [];
+  if(plan) items.push({p:plan, prog:progress, active:true});
+  plans.forEach(s=> items.push({p:s, prog:s.progress || {}, active:false}));
+  if(!items.length){
+    const e = document.createElement("div"); e.className = "small";
+    e.textContent = "Bé chưa có giáo trình nào. Bấm “Tạo giáo trình theo tuổi của bé” để bắt đầu.";
+    box.appendChild(e); return;
+  }
+  items.forEach(it=>{
+    const p = it.p, st = planStats(p, it.prog);
+    const row = document.createElement("div"); row.className = "chrow" + (it.active ? " on" : "");
+    const info = document.createElement("div");
+    const t = document.createElement("div"); t.style.fontWeight = "800";
+    t.textContent = (it.active ? "▶ Đang dùng · " : "") + fmtDate(p.createdAt) + " · " + p.age + " tuổi";
+    const m = document.createElement("div"); m.className = "meta";
+    const titles = (p.lessons || []).slice(0,3).map(l=>l.title).join(", ");
+    m.textContent = (p.lessons || []).length + " bài: " + titles + ((p.lessons || []).length > 3 ? "…" : "") +
+      " · đọc tốt " + st.done + "/" + st.total + " từ";
+    info.appendChild(t); info.appendChild(m);
+    const btns = document.createElement("div"); btns.className = "btns";
+    if(!it.active){
+      btns.appendChild(mkBtn("Mở lại", "mini primary", ()=> openSavedPlan(p.id)));
+      btns.appendChild(mkBtn("🗑", "mini", ()=>{
+        if(!confirm("Xóa giáo trình đã lưu này?")) return;
+        plans = plans.filter(x=>x.id !== p.id);
+        safeSet(PLANS_KEY, JSON.stringify(plans));
+        renderPlansList();
+      }));
+    }
+    row.appendChild(info); row.appendChild(btns);
+    box.appendChild(row);
+  });
+}
+$("btnPlans").onclick = ()=>{ renderPlansList(); $("dlgPlans").showModal(); };
+$("plansClose").onclick = ()=> $("dlgPlans").close();
+
 /* ---------- Khởi động ---------- */
 if("speechSynthesis" in window) speechSynthesis.getVoices();
-renderTopics(); render();
+loadChildren();
+activeChildId = safeGet(ACTIVE_KEY,"");
+if(!children.some(c=>c.id===activeChildId)) activeChildId = children[0] ? children[0].id : "";
+safeSet(ACTIVE_KEY, activeChildId);
+applyChild();
+if(!children.length) openChildren();   /* lần đầu: mời thêm bé */
 </script>
 </body>
 </html>
